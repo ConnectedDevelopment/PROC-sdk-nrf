@@ -142,6 +142,7 @@ nrfx_err_t nfc_platform_setup(nfc_lib_cb_resolve_t nfc_lib_cb_resolve, uint8_t *
 static nrfx_err_t nfc_platform_tagheaders_get(uint32_t tag_header[3])
 {
 #ifdef CONFIG_TRUSTED_EXECUTION_NONSECURE
+#ifndef CONFIG_SOC_SERIES_NRF54LX
 #if defined(CONFIG_BUILD_WITH_TFM)
 	uint32_t err = 0;
 	enum tfm_platform_err_t plt_err;
@@ -169,6 +170,7 @@ static nrfx_err_t nfc_platform_tagheaders_get(uint32_t tag_header[3])
 	tag_header[1] = nrf_ficr_nfc_tagheader_get(NRF_FICR, 1);
 	tag_header[2] = nrf_ficr_nfc_tagheader_get(NRF_FICR, 2);
 
+#endif /* CONFIG_SOC_SERIES_NRF54LX */
 #endif /* CONFIG_TRUSTED_EXECUTION_NONSECURE */
 
 	return NRFX_SUCCESS;
