@@ -29,12 +29,67 @@ Samples and applications
 
 This section describes the changes related to samples and applications.
 
-|no_changes_yet_note|
+nRF5340 Audio applications
+--------------------------
+
+.. toggle::
+
+   * The :ref:`nrf53_audio_app` :ref:`nrf53_audio_app_building_script` now requires the transport (``-t/--transport``) type to be included.
+   * The :ref:`nrf53_audio_app` :ref:`nrf53_audio_app_building_standard` now requires an extra :ref:`CMake option to provide extra Kconfig fragments <cmake_options>` to select the device type.
 
 Libraries
 =========
 
 This section describes the changes related to libraries.
+
+Google Fast Pair
+----------------
+
+.. toggle::
+
+   For applications and samples using the :ref:`bt_fast_pair_readme` library:
+
+   * If you use sysbuild for generating a hex file with the Fast Pair provisioning data, you must align your application with the new approach for passing the provisioning parameters (the Model ID and the Anti-Spoofing Private Key).
+     The ``FP_MODEL_ID`` and ``FP_ANTI_SPOOFING_KEY`` CMake variables are replaced by the corresponding ``SB_CONFIG_BT_FAST_PAIR_MODEL_ID`` and ``SB_CONFIG_BT_FAST_PAIR_ANTI_SPOOFING_PRIVATE_KEY`` Kconfig options that are defined at the sysbuild level.
+     The following additional build parameters for Fast Pair are no longer valid:
+
+     ``-DFP_MODEL_ID=0xFFFFFF -DFP_ANTI_SPOOFING_KEY=AbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbA=``
+
+     You must replace them with the new sysbuild Kconfig options.
+     You can provide them as additional build parameters to the build command as follows:
+
+     .. tabs::
+
+        .. tab:: Windows
+
+           ``-DSB_CONFIG_BT_FAST_PAIR_MODEL_ID=0xFFFFFF -DSB_CONFIG_BT_FAST_PAIR_ANTI_SPOOFING_PRIVATE_KEY='\"AbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbA=\"'``
+
+        .. tab:: Linux
+
+           ``-DSB_CONFIG_BT_FAST_PAIR_MODEL_ID=0xFFFFFF -DSB_CONFIG_BT_FAST_PAIR_ANTI_SPOOFING_PRIVATE_KEY=\"AbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbA=\"``
+
+     You can replace this exemplary method with any other configuration method that is supported by sysbuild.
+
+     .. note::
+        To avoid build failures, you must surround the string value for the Anti-Spoofing Private Key parameter with the special character sequence instead of the typical ``"`` character.
+        The surrounding characters depend on your operating system:
+
+        .. tabs::
+
+           .. tab:: Windows
+
+              1. Replace the standard ``"`` character with the ``\"`` characters.
+              #. Surround the modified string value with the ``'`` character.
+
+           .. tab:: Linux
+
+              Replace the standard ``"`` character with the ``\"`` characters.
+
+        The special character sequence is only required when you pass the ``SB_CONFIG_BT_FAST_PAIR_ANTI_SPOOFING_PRIVATE_KEY`` Kconfig option as an additional build parameter.
+
+   * You must remove the ``SB_CONFIG_BT_FAST_PAIR`` Kconfig option from the sysbuild configuration in your project.
+     The ``SB_CONFIG_BT_FAST_PAIR`` option no longer exists in this |NCS| release.
+     Additionally, if you rely on the ``SB_CONFIG_BT_FAST_PAIR`` Kconfig option to set the :kconfig:option:`CONFIG_BT_FAST_PAIR` Kconfig option in the main image configuration of your application, you must align your main image configuration and set the :kconfig:option:`CONFIG_BT_FAST_PAIR` Kconfig option explicitly.
 
 nRF Cloud library
 -----------------
@@ -52,6 +107,36 @@ Recommended changes
 *******************
 
 The following changes are recommended for your application to work optimally after the migration.
+
+Build system
+============
+
+.. toggle::
+
+   * The default runner for the ``west flash`` command has been changed to use `nRF Util`_ instead of ``nrfjprog`` that is part of the archived `nRF Command Line Tools`_.
+     This affects all :ref:`boards <app_boards>` that used ``nrfjprog`` as the west runner backend for programming the following SoCs and SiPs:
+
+     * nRF91 Series (including nRF91x1)
+     * nRF7002
+     * nRF5340 (including nRF5340 Audio DK)
+     * Nordic Thingy:53
+     * nRF52 Series
+     * nRF21540
+
+     This change is made to ensure that the programming process is consistent across all boards and to provide a more robust programming experience.
+     The ``west flash`` command now uses the ``nrfutil device`` subcommand by default to flash the application to the board.
+
+     It is recommended to install nRF Util to avoid potential issues during programming.
+     Complete the following steps:
+
+     1. Follow the steps for `Installing nRF Util`_ in its official documentation.
+     2. Install the `nrfutil device <Device command overview_>`_ using the following command:
+
+        .. code-block::
+
+           nrfutil install device
+
+     If you prefer to continue using ``nrfjprog`` for programming devices, :ref:`specify the west runner <programming_selecting_runner>` with ``west flash``.
 
 Samples and applications
 ========================
@@ -219,3 +304,19 @@ Download client
         .. code-block:: C
 
            err = downloader_deinit(&dl);
+
+Protocols
+=========
+
+This section provides detailed lists of changes by :ref:`protocol <protocols>`.
+
+Bluetooth Mesh
+--------------
+
+.. toggle::
+
+   * Support for Tinycrypt-based security toolbox (:kconfig:option:`CONFIG_BT_MESH_USES_TINYCRYPT`) has started the deprecation procedure and is not recommended for future designs.
+   * For platforms that do not support the TF-M: The default security toolbox is based on the Mbed TLS PSA API (:kconfig:option:`CONFIG_BT_MESH_USES_MBEDTLS_PSA`).
+   * For platforms that support the TF-M: The default security toolbox is based on the TF-M PSA API (:kconfig:option:`CONFIG_BT_MESH_USES_TFM_PSA`).
+
+The :ref:`ug_bt_mesh_configuring` page provides more information about the updating of the images based on different security toolboxes.

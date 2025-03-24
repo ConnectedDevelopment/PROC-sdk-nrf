@@ -461,10 +461,14 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_pre_cmake)
       set_config_bool(mcuboot CONFIG_FW_INFO y)
 
       if(SB_CONFIG_BOOT_SIGNATURE_TYPE_ECDSA_P256)
-        add_overlay_config(
-          mcuboot
-          ${ZEPHYR_MCUBOOT_MODULE_DIR}/boot/zephyr/external_crypto.conf
-          )
+        if(SB_CONFIG_SOC_SERIES_NRF54LX)
+          set_config_bool(mcuboot CONFIG_BOOT_ECDSA_TINYCRYPT y)
+        else()
+          add_overlay_config(
+            mcuboot
+            ${ZEPHYR_MCUBOOT_MODULE_DIR}/boot/zephyr/external_crypto.conf
+            )
+        endif()
       else()
         message(WARNING "MCUboot and secure boot (application core) are enabled but MCUboot signing key type is not set to ECDSA-P256, this is a non-optimal configuration")
       endif()
@@ -472,11 +476,62 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_pre_cmake)
       set_config_bool(${DEFAULT_IMAGE} CONFIG_SECURE_BOOT y)
       set_config_bool(${DEFAULT_IMAGE} CONFIG_FW_INFO y)
     endif()
+
+    # Apply configuration for hashing
+    if(SB_CONFIG_SECURE_BOOT_HASH_TYPE_SHA256 AND NOT SB_CONFIG_SECURE_BOOT_APPCORE_HASH_TYPE_NONE)
+      if(SB_CONFIG_SECURE_BOOT_APPCORE_HASH_TYPE_HARDWARE)
+        set_config_bool(b0 CONFIG_SB_CRYPTO_CC310_SHA256 y)
+      elseif(SB_CONFIG_SECURE_BOOT_APPCORE_HASH_TYPE_SOFTWARE)
+        set_config_bool(b0 CONFIG_SB_CRYPTO_OBERON_SHA256 y)
+      elseif(SB_CONFIG_SECURE_BOOT_APPCORE_HASH_TYPE_UNUSED)
+        set_config_bool(b0 CONFIG_SB_CRYPTO_NO_SHA256 y)
+      endif()
+    elseif(SB_CONFIG_SECURE_BOOT_HASH_TYPE_NONE OR SB_CONFIG_SECURE_BOOT_APPCORE_HASH_TYPE_NONE)
+      set_config_bool(b0 CONFIG_SB_CRYPTO_NONE y)
+    endif()
+
+    if(SB_CONFIG_SECURE_BOOT_SIGNATURE_TYPE_ED25519)
+      if(SB_CONFIG_SECURE_BOOT_APPCORE_SIGNATURE_TYPE_HARDWARE)
+        set_config_bool(b0 CONFIG_NRF_SECURITY y)
+        set_config_bool(b0 CONFIG_SB_CRYPTO_PSA_ED25519 y)
+      endif()
+    elseif(SB_CONFIG_SECURE_BOOT_SIGNATURE_TYPE_ECDSA)
+      if(SB_CONFIG_SECURE_BOOT_APPCORE_SIGNATURE_TYPE_HARDWARE)
+        set_config_bool(b0 CONFIG_SB_CRYPTO_CC310_ECDSA_SECP256R1 y)
+      elseif(SB_CONFIG_SECURE_BOOT_APPCORE_SIGNATURE_TYPE_SOFTWARE)
+        set_config_bool(b0 CONFIG_SB_CRYPTO_OBERON_ECDSA_SECP256R1 y)
+      elseif(SB_CONFIG_SECURE_BOOT_APPCORE_SIGNATURE_TYPE_UNUSED)
+        set_config_bool(b0 CONFIG_SB_CRYPTO_NO_ECDSA_SECP256R1 y)
+      endif()
+    endif()
+  endif()
+
+  if(SB_CONFIG_SECURE_BOOT_BOOTCONF_LOCK_WRITES)
+    set_config_bool(b0 CONFIG_FPROTECT_ALLOW_COMBINED_REGIONS n)
   endif()
 
   if(SB_CONFIG_SECURE_BOOT_NETCORE)
     if(NOT SB_CONFIG_NETCORE_NONE)
       set_config_bool(${SB_CONFIG_NETCORE_IMAGE_NAME} CONFIG_SECURE_BOOT y)
+    endif()
+
+    # Apply configuration for hashing
+    if(SB_CONFIG_SECURE_BOOT_HASH_TYPE_SHA256 AND NOT SB_CONFIG_SECURE_BOOT_NETCORE_HASH_TYPE_NONE)
+      if(SB_CONFIG_SECURE_BOOT_NETCORE_HASH_TYPE_SOFTWARE)
+        set_config_bool(b0n CONFIG_SB_CRYPTO_OBERON_SHA256 y)
+      elseif(SB_CONFIG_SECURE_BOOT_NETCORE_HASH_TYPE_UNUSED)
+        set_config_bool(b0n CONFIG_SB_CRYPTO_NO_SHA256 y)
+      endif()
+    elseif(SB_CONFIG_SECURE_BOOT_HASH_TYPE_NONE OR SB_CONFIG_SECURE_BOOT_NETCORE_HASH_TYPE_NONE)
+      set_config_bool(b0n CONFIG_SB_CRYPTO_NONE y)
+    endif()
+
+    if(SB_CONFIG_SECURE_BOOT_SIGNATURE_TYPE_ECDSA)
+      if(SB_CONFIG_SECURE_BOOT_NETCORE_SIGNATURE_TYPE_SOFTWARE)
+        set_config_bool(b0n CONFIG_SB_CRYPTO_OBERON_ECDSA_SECP256R1 y)
+      elseif(SB_CONFIG_SECURE_BOOT_NETCORE_SIGNATURE_TYPE_UNUSED)
+        set_config_bool(b0n CONFIG_SB_CRYPTO_NO_ECDSA_SECP256R1 y)
+      endif()
     endif()
 
     if(SB_CONFIG_BOOTLOADER_MCUBOOT)
@@ -504,21 +559,9 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_pre_cmake)
     set_config_bool(mcuboot CONFIG_PCD_APP n)
   endif()
 
-  if(SB_CONFIG_BT_FAST_PAIR)
-    set_config_bool(${DEFAULT_IMAGE} CONFIG_BT_FAST_PAIR y)
-
-    if(DEFINED FP_MODEL_ID AND DEFINED FP_ANTI_SPOOFING_KEY)
-      if(SB_CONFIG_PARTITION_MANAGER)
-        include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/fast_pair_hex.cmake)
-      endif()
-
-      set(FP_DATA_PRESENT "y" CACHE INTERNAL "Fast Pair provisioning data provided" FORCE)
-    else()
-      message(WARNING "Fast Pair support is enabled but `FP_MODEL_ID` or `FP_ANTI_SPOOFING_KEY` were not provided, this is likely to cause a build error")
-      set(FP_DATA_PRESENT "n" CACHE INTERNAL "Fast Pair provisioning data provided" FORCE)
-    endif()
-  else()
-    set_config_bool(${DEFAULT_IMAGE} CONFIG_BT_FAST_PAIR n)
+  if(SB_CONFIG_BT_FAST_PAIR_PROV_DATA AND SB_CONFIG_PARTITION_MANAGER)
+    # The PM properties for the Fast Pair hex file must be set in the pre-CMake stage.
+    include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/fast_pair/hex.cmake)
   endif()
 
   if(SB_CONFIG_WIFI_NRF70)
@@ -665,8 +708,9 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_post_cmake)
   set_property(GLOBAL PROPERTY DOMAIN_APP_APP ${DEFAULT_IMAGE})
 
   # Include any files that need to merge files with uicr_merged.hex before including suit
-  if(FP_DATA_PRESENT AND NOT SB_CONFIG_PARTITION_MANAGER)
-    include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/fast_pair_hex.cmake)
+  if(SB_CONFIG_BT_FAST_PAIR_PROV_DATA AND NOT SB_CONFIG_PARTITION_MANAGER)
+    # The DTS partition for the Fast Pair hex file is available in the post-CMake stage.
+    include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/fast_pair/hex.cmake)
   endif()
 
   if(SB_CONFIG_MATTER_FACTORY_DATA_GENERATE)
@@ -694,6 +738,10 @@ function(${SYSBUILD_CURRENT_MODULE_NAME}_post_cmake)
 
   if(SB_CONFIG_WIFI_PATCHES_EXT_FLASH_STORE)
     include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/nrf700x.cmake)
+  endif()
+
+  if(SB_CONFIG_SECURE_BOOT_BOOTCONF_LOCK_WRITES)
+    include(${ZEPHYR_NRF_MODULE_DIR}/cmake/sysbuild/bootconf.cmake)
   endif()
 
   if(SB_CONFIG_DFU_ZIP)

@@ -30,7 +30,7 @@
 #define KEY_READ_TIME DK_BTN1_MSK
 
 static struct bt_cts_client cts_c;
-
+static struct k_work adv_work;
 static bool has_cts;
 
 static const struct bt_data ad[] = {
@@ -162,6 +162,24 @@ static const struct bt_gatt_dm_cb discover_cb = {
 	.error_found = discover_error_found_cb,
 };
 
+
+static void adv_work_handler(struct k_work *work)
+{
+	int err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_2, ad, ARRAY_SIZE(ad), NULL, 0);
+
+	if (err) {
+		printk("Advertising failed to start (err %d)\n", err);
+		return;
+	}
+
+	printk("Advertising successfully started\n");
+}
+
+static void advertising_start(void)
+{
+	k_work_submit(&adv_work);
+}
+
 static void connected(struct bt_conn *conn, uint8_t err)
 {
 	char addr[BT_ADDR_LE_STR_LEN];
@@ -211,10 +229,17 @@ static void security_changed(struct bt_conn *conn, bt_security_t level,
 	}
 }
 
+static void recycled_cb(void)
+{
+	printk("Connection object available from previous conn. Disconnect is complete!\n");
+	advertising_start();
+}
+
 BT_CONN_CB_DEFINE(conn_callbacks) = {
-	.connected = connected,
-	.disconnected = disconnected,
+	.connected        = connected,
+	.disconnected     = disconnected,
 	.security_changed = security_changed,
+	.recycled         = recycled_cb,
 };
 
 static void auth_cancel(struct bt_conn *conn)
@@ -346,13 +371,8 @@ int main(void)
 		return 0;
 	}
 
-	err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_2, ad, ARRAY_SIZE(ad), NULL, 0);
-	if (err) {
-		printk("Advertising failed to start (err %d)\n", err);
-		return 0;
-	}
-
-	printk("Advertising successfully started\n");
+	k_work_init(&adv_work, adv_work_handler);
+	advertising_start();
 
 	for (;;) {
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);

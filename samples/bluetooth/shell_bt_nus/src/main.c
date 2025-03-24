@@ -25,6 +25,7 @@ LOG_MODULE_REGISTER(app);
 
 
 static struct bt_conn *current_conn;
+static struct k_work adv_work;
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -34,6 +35,23 @@ static const struct bt_data ad[] = {
 static const struct bt_data sd[] = {
 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
 };
+
+static void adv_work_handler(struct k_work *work)
+{
+	int err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_2, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+
+	if (err) {
+		printk("Advertising failed to start (err %d)\n", err);
+		return;
+	}
+
+	printk("Advertising successfully started\n");
+}
+
+static void advertising_start(void)
+{
+	k_work_submit(&adv_work);
+}
 
 static void connected(struct bt_conn *conn, uint8_t err)
 {
@@ -56,6 +74,12 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 		bt_conn_unref(current_conn);
 		current_conn = NULL;
 	}
+}
+
+static void recycled_cb(void)
+{
+	printk("Connection object available from previous conn. Disconnect is complete!\n");
+	advertising_start();
 }
 
 static char *log_addr(struct bt_conn *conn)
@@ -84,6 +108,7 @@ static void __attribute__((unused)) security_changed(struct bt_conn *conn,
 BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected    = connected,
 	.disconnected = disconnected,
+	.recycled     = recycled_cb,
 	COND_CODE_1(CONFIG_BT_SMP,
 		    (.security_changed = security_changed), ())
 };
@@ -151,14 +176,8 @@ int main(void)
 		return 0;
 	}
 
-	err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_2, ad, ARRAY_SIZE(ad), sd,
-			      ARRAY_SIZE(sd));
-	if (err) {
-		LOG_ERR("Advertising failed to start (err %d)", err);
-		return 0;
-	}
-
-	LOG_INF("Bluetooth ready. Advertising started.");
+	k_work_init(&adv_work, adv_work_handler);
+	advertising_start();
 
 	return 0;
 }

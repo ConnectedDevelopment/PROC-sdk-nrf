@@ -275,6 +275,7 @@ ci_samples_openthread:
     - nrf/drivers/hw_cc3xx/
     - nrf/drivers/mpsl/
     - nrf/modules/nrfxlib/nrf_802154/
+    - nrf/modules/openthread/
     - nrf/samples/openthread/
     - nrf/subsys/ieee802154/
     - nrf/subsys/mpsl/
@@ -290,7 +291,6 @@ ci_samples_openthread:
     - nrfxlib/openthread/
     - zephyr/include/zephyr/net/
     - zephyr/modules/mbedtls/
-    - zephyr/modules/openthread/
     - zephyr/soc/nordic/
     - zephyr/subsys/net/
     - zephyr/subsys/settings/
@@ -367,52 +367,6 @@ ci_tests_lib_date_time_unity:
     - nrf/tests/include/
     - nrf/tests/lib/date_time/
     - nrf/tests/mocks/nrf_modem_at/
-
-Sidewalk:
-  files:
-    - bootloader/mcuboot/
-    - modules/crypto/mbedtls/
-    - modules/crypto/oberon-psa-crypto/
-    - modules/crypto/tinycrypt/
-    - modules/lib/open-amp/open-amp/
-    - modules/lib/zcbor/
-    - nrf/applications/ipc_radio/
-    - nrf/drivers/entropy/
-    - nrf/drivers/hw_cc3xx/
-    - nrf/drivers/mpsl/
-    - nrf/lib/dk_buttons_and_leds/
-    - nrf/lib/fatal_error/
-    - nrf/lib/fprotect/
-    - nrf/modules/mcuboot/
-    - nrf/subsys/bluetooth/controller/
-    - nrf/subsys/bootloader/
-    - nrf/subsys/dfu/
-    - nrf/subsys/fw_info/
-    - nrf/subsys/mpsl/
-    - nrf/subsys/nrf_security/
-    - nrf/subsys/partition_manager/
-    - nrf/subsys/pcd/
-    - nrf/subsys/trusted_storage/
-    - nrfxlib/crypto/
-    - sidewalk/
-    - zephyr/include/dfu/
-    - zephyr/include/mgmt/mcumgr/
-    - zephyr/samples/bluetooth/hci_ipc/
-    - zephyr/soc/nordic/
-    - zephyr/subsys/dfu/
-    - zephyr/subsys/fs/
-    - zephyr/subsys/ipc/
-    - zephyr/subsys/mem_mgmt/
-    - zephyr/subsys/mgmt/
-    - zephyr/subsys/mgmt/mcumgr/
-    - zephyr/subsys/net/
-    - zephyr/subsys/pm/
-    - zephyr/subsys/random/
-    - zephyr/subsys/settings/
-    - zephyr/subsys/settings/
-    - zephyr/subsys/shell/
-    - zephyr/subsys/storage/
-    - zephyr/subsys/usb/
 
 find_my:
   files:
@@ -1312,8 +1266,12 @@ ci_tests_drivers_sdp:
     - nrf/snippets/sdp/
     - nrf/tests/drivers/gpio/egpio_basic_api/
     - nrf/tests/drivers/sdp_asm/
+    - nrf/tests/zephyr/drivers/flash/
+    - nrf/tests/zephyr/drivers/mspi/
     - zephyr/drivers/mbox/
     - zephyr/subsys/ipc/ipc_service/
+    - nrf/samples/zephyr/basic/blinky/
+    - zephyr/samples/zephyr/basic/blinky/
 
 ci_tests_drivers_gpio:
   files:
@@ -1459,6 +1417,7 @@ ci_applications_protocols_serialization:
     - nrf/applications/protocols_serialization/
     - nrf/drivers/mpsl/
     - nrf/modules/nrfxlib/nrf_802154/
+    - nrf/modules/openthread/
     - nrf/subsys/bluetooth/
     - nrf/subsys/ieee802154/
     - nrf/subsys/logging/
@@ -1471,7 +1430,6 @@ ci_applications_protocols_serialization:
     - nrfxlib/nrf_802154/
     - nrfxlib/nrf_rpc/
     - zephyr/drivers/ieee802154/
-    - zephyr/modules/openthread/
     - zephyr/subsys/bluetooth/
     - zephyr/subsys/net/
     - zephyr/subsys/retention/
@@ -1516,32 +1474,117 @@ ci_samples_nrf5340:
     - zephyr/subsys/shell/
     - zephyr/subsys/usb/
 
-ci_samples_sensor_qdec:
+ci_samples_zephyr_sensor_accel_polling:
   files:
-    - nrf/samples/sensor/qdec/
+    - nrf/samples/zephyr/sensor/accel_polling/
+    - zephyr/samples/sensor/accel_polling/
+
+ci_samples_zephyr_sensor_bme680:
+  files:
+    - nrf/samples/zephyr/sensor/bme680/
+    - zephyr/samples/sensor/bme680/
+
+ci_samples_zephyr_sensor_qdec:
+  files:
+    - nrf/samples/zephyr/sensor/qdec/
     - zephyr/samples/sensor/qdec/
 
-ci_samples_subsys_settings:
+ci_samples_zephyr_subsys_settings:
   files:
-    - nrf/samples/subsys/settings/
+    - nrf/samples/zephyr/subsys/settings/
     - zephyr/samples/subsys/settings/
 
-ci_samples_drivers_audio_dmic:
+ci_samples_zephyr_drivers_audio_dmic:
   files:
-    - nrf/samples/drivers/audio/dmic/
+    - nrf/samples/zephyr/drivers/audio/dmic/
     - zephyr/samples/drivers/audio/dmic/
 
-ci_tests_drivers_spi:
+ci_tests_zephyr_drivers_i2c_i2c_bme688:
   files:
-    - nrf/tests/drivers/spi/
+    - nrf/tests/zephyr/drivers/i2c/i2c_bme688
+    - zephyr/tests/drivers/i2c/i2c_bme688
+
+ci_tests_zephyr_drivers_spi:
+  files:
+    - nrf/tests/zephyr/drivers/spi/
     - zephyr/tests/drivers/spi/
 
-ci_tests_drivers_i2c:
+ci_tests_zephyr_drivers_i2c:
   files:
-    - nrf/tests/drivers/i2c/
+    - nrf/tests/zephyr/drivers/i2c/
     - zephyr/tests/drivers/i2c/
 
-ci_samples_drivers_i2c:
+ci_samples_zephyr_drivers_i2c:
   files:
-    - nrf/samples/drivers/i2c/
+    - nrf/samples/zephyr/drivers/i2c/
     - zephyr/samples/drivers/i2c/
+
+ci_samples_zephyr_drivers_mbox:
+  files:
+    - nrf/samples/zephyr/drivers/mbox/
+    - zephyr/samples/drivers/mbox/
+
+ci_samples_zephyr_boards_nordic_system_off:
+  files:
+    - nrf/samples/zephyr/boards/nordic/system_off/
+    - zephyr/samples/boards/nordic/system_off/
+
+ci_tests_zephyr_drivers_watchdog:
+  files:
+    - nrf/tests/zephyr/drivers/watchdog/
+    - zephyr/tests/drivers/watchdog/
+
+ci_sampples_zephyr_drivers_watchdog:
+  files:
+    - nrf/samples/zephyr/drivers/watchdog/
+    - zephyr/samples/drivers/watchdog/
+
+ci_tests_zephyr_boards_nrf_hwinfo:
+  files:
+    - nrf/tests/zephyr/boards/nrf/hwinfo/
+    - zephyr/tests/boards/nrf/hwinfo/
+
+ci_tests_zephyr_drivers_comparator:
+  files:
+    - nrf/tests/zephyr/drivers/comparator/
+    - zephyr/tests/drivers/comparator/
+
+ci_tests_zephyr_boards_nrf_comp:
+  files:
+    - nrf/tests/zephyr/boards/nrf/comp/
+    - zephyr/tests/boards/nrf/comp/
+
+ci_tests_zephyr_drivers_gpio:
+  files:
+    - nrf/tests/zephyr/drivers/gpio/
+    - zephyr/tests/drivers/gpio/
+
+ci_tests_zephyr_boards_nrf_qdec:
+  files:
+    - nrf/tests/zephyr/boards/nrf/qdec/
+    - zephyr/tests/boards/nrf/qdec/
+
+ci_tests_zephyr_drivers_adc:
+  files:
+    - nrf/tests/zephyr/drivers/adc/
+    - zephyr/tests/drivers/adc/
+
+ci_samples_zephyr_drivers_adc:
+  files:
+    - nrf/samples/zephyr/drivers/adc/
+    - zephyr/samples/drivers/adc/
+
+ci_tests_zephyr_drivers_timer:
+  files:
+    - nrf/tests/zephyr/drivers/timer/
+    - zephyr/tests/drivers/timer/
+
+ci_samples_zephyr_subsys_usb:
+  files:
+    - nrf/samples/zephyr/subsys/usb/
+    - zephyr/samples/subsys/usb/
+
+ci_tests_zephyr_drivers_uart:
+  files:
+    - nrf/tests/zephyr/drivers/uart/
+    - zephyr/tests/drivers/uart/

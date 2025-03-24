@@ -22,11 +22,16 @@ Once completed, install the required additional commands for nRF Util:
 
     nrfutil install device
 
+Additionally, before provisioning, make sure you familiarized yourself with the :ref:`ug_nrf54l_developing_basics_kmu_provisioning_keys` section.
+
+.. _ug_nrf54l_developing_provision_kmu_generate:
+
 Key generation
 **************
 
-If you need a new key, you can generate it using imgtool or another tool that produces the required kind and format of key.
-For instructions on how to generate a key, see the :doc:`imgtool page in the MCUboot documentation<mcuboot:imgtool>`.
+If you need a new key, you can generate it using imgtool or another tool that produces the required kind and format of key as a PEM file.
+
+For instructions on how to generate a key using imgtool, see the :doc:`imgtool page in the MCUboot documentation<mcuboot:imgtool>`.
 See the following example for generating a private key:
 
 .. parsed-literal::
@@ -38,80 +43,93 @@ Provisioning keys to the board
 ******************************
 
 Before uploading keys, ensure that the SoC is unprovisioned.
-If the SoC has been previously provisioned and you need to use a different set of keys, you must first erase the SoC with the erase command:
+If the SoC has been previously provisioned and you need to use a different set of keys, you must first erase the SoC with the following erase command:
+
+.. code-block::
+
+   nrfutil device erase --all
+
+Once you have an unprovisioned SoC, upload keys to the board by running one of the following commands:
 
 .. tabs::
 
-    .. group-tab:: erase using nrfutil
+   .. tab:: west
 
       .. parsed-literal::
-         :class: highlight
+        :class: highlight
 
-          nrfutil device erase
+          west ncs-provision upload -s nrf54l15 -k ed25519.pem -k ed25519-1.pem -k ed25519-2.pem --keyname UROT_PUBKEY
 
-    .. group-tab:: erase using nrfjprog
+      * Parameter ``-s (-–soc)`` specifies the target device.
+
+      * Parameter ``-k (-–key)`` specifies the private key PEM files to be provisioned to the SoC.
+        You can specify up to three keys.
+
+      * Parameter ``--keyname`` specifies the key name for which the key PEM files will be uploaded.
+
+      * Parameter ``--dev-id`` specifies the interface serial number and should be used if multiple J-link interfaces are connected to the development machine.
+
+      * Parameter ``-p (--policy)`` specifies the policy applied to the given set of keys.
+        You can apply the following options:
+
+            * ``lock-last`` - Uploads the last key as locked, while the preceding keys are revocable.
+              This option is set by default.
+            * ``revokable`` - Enables revocation for each key.
+            * ``lock`` - Sets all keys to be permanent.
+
+      * Parameter ``--build-dir`` specifies the path to a directory where a JSON file for nRF Util tool will be created.
+        If this parameter is not provided, a temporary directory will be used instead.
+
+      * Parameter ``-i (--input)`` specifies path to a YAML file that contains one or more key definitions intended for upload.
+        This file can serve as a substitute for other parameters.
+
+        The YAML file should look as follows:
+
+        .. code-block:: YAML
+
+            - keyname: UROT_PUBKEY
+                keys: ["/path/private-key1.pem", "/path/private-key2.pem"]
+                policy: lock
+            - keyname: APP_PUBKEY
+                keys: ["/path/private-key3.pem", "/path/private-key4.pem"]
+                policy: lock
+
+      * Parameter ``--dry-run`` specifies that a command should generate a keyfile for nRF Util without actually executing the command.
+
+      The script generates the public key for each private key and uploads them to your device.
+      These public keys generate the verification keys for the application image, which are then used by MCUboot for validation.
+      The first key specified in the command is used for signing the application image.
+      Currently, the script supports only ED25519 Keys.
+
+      For MCUboot, take note of the following:
+
+      * By default, it uses one key.
+      * KMU support in its configuration needs to be enabled by setting the ``SB_CONFIG_MCUBOOT_SIGNATURE_USING_KMU`` sysbuild Kconfig option.
+        Otherwise, MCUboot will fallback to the compiled-in key.
+
+      To provision one key to the board, run the following command:
 
       .. parsed-literal::
-         :class: highlight
+        :class: highlight
 
-          nrfjprog --eraseall
+          west ncs-provision upload -s nrf54l15 -k ed25519.pem --keyname UROT_PUBKEY
 
-Once you have an unprovisioned SoC, upload keys to the board by running the following command:
+   .. tab:: nRF Util
 
-.. parsed-literal::
-   :class: highlight
+      The nRF Util provisioning command requires a JSON file with the keys and the key metadata.
 
-    west ncs-provision upload -s nrf54l15 -k ed25519.pem -k ed25519-1.pem -k ed25519-2.pem --keyname UROT_PUBKEY
+      You can use the `generate_psa_key_attributes.py`_ script, :ref:`similarly to nRF54H20<ug_nrf54h20_keys_generating>`, to generate the JSON file and the metadata from the PEM file you :ref:`generated earlier <ug_nrf54l_developing_provision_kmu_generate>`.
+      For this purpose, invoke the script with the ``--key-from-file`` option to provide the PEM file and with the ``--file`` option to create a JSON file.
+      The file can contain multiple keys.
+      Calling the script multiple times and passing the same file to the `--file` argument will add all keys to the same JSON file.
 
-* Parameter ``-s (-–soc)`` specifies the target device.
+      To provision keys onto the KMU of the nRF54L15 SoC, use the following nRF Util command, with the ``<snr>`` being the serial number of the device and ``<key-file>`` being the name of the key file in the JSON format:
 
-* Parameter ``-k (-–key)`` specifies the private key PEM files to be provisioned to the SoC.
-  You can specify up to three keys.
+      .. parsed-literal::
+        :class: highlight
 
-* Parameter ``--keyname`` specifies the key name for which the key PEM files will be uploaded.
+         nrfutil device x-provision-keys --serial-number <snr> --key-file <JSON-key-file>
 
-* Parameter ``--dev-id`` specifies the interface serial number and should be used if multiple J-link interfaces are connected to the development machine.
+      You can call this command multiple times also to provision multiple keys, as long as each key has a different ID that is part of the metadata string.
 
-* Parameter ``-p (--policy)`` specifies the policy applied to the given set of keys.
-  You can apply the following options:
-
-      * ``lock-last`` - Uploads the last key as locked, while the preceding keys are revocable. This option is set by default.
-      * ``revokable`` - Enables revocation for each key.
-      * ``lock`` - Sets all keys to be permanent.
-
-* Parameter ``--build-dir`` specifies the path to a directory where a JSON file for nRF Util tool will be created.
-  If this parameter is not provided, a temporary directory will be used instead.
-
-* Parameter ``-i (--input)`` specifies path to a YAML file that contains one or more key definitions intended for upload.
-  This file can serve as a substitute for other parameters.
-
-  The YAML file should look as follows:
-
-   .. code-block:: YAML
-
-      - keyname: UROT_PUBKEY
-          keys: ["/path/private-key1.pem", "/path/private-key2.pem"]
-          policy: lock
-      - keyname: APP_PUBKEY
-          keys: ["/path/private-key3.pem", "/path/private-key4.pem"]
-          policy: lock
-
-* Parameter ``--dry-run`` specifies that a command should generate a keyfile for nRF Util without actually executing the command.
-
-The script generates the public key for each private key and uploads them to your device.
-These public keys generate the verification keys for the application image, which are then used by MCUboot for validation.
-The first key specified in the command is used for signing the application image.
-Currently, the script supports only ED25519 Keys.
-
-For MCUboot, take note of the following:
-
-* By default, it uses one key.
-* KMU support in its configuration needs to be enabled by setting the ``SB_CONFIG_MCUBOOT_SIGNATURE_USING_KMU`` sysbuild Kconfig option.
-  Otherwise, MCUboot will fallback to the compiled in key.
-
-For provision one key to the board run the following command:
-
-.. parsed-literal::
-   :class: highlight
-
-    west ncs-provision upload -s nrf54l15 -k ed25519.pem --keyname UROT_PUBKEY
+      For more information about this command, see the `Provisioning keys for hardware KMU`_ page in the nRF Util documentation.

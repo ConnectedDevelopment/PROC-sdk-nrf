@@ -339,7 +339,7 @@ Depending on the development kit you use, you need to select the respective conf
 
       .. table-from-rows:: /includes/sample_board_rows.txt
          :header: heading
-         :rows: nrf52dmouse_nrf52832, nrf52810dmouse_nrf52810
+         :rows: nrf52dmouse_nrf52832
 
    .. tab:: Keyboard
 
@@ -920,7 +920,7 @@ See :ref:`app_build_file_suffixes` and :ref:`cmake_options` for information abou
 
       * Device Name: NCS keyboard
       * Model ID: ``0x52FF02``
-      * Anti-Spoofing Private Key (base64, uncompressed): ``8E8ulwhSIp/skZeg27xmWv2SxRxTOagypHrf2OdrhGY=``
+      * Anti-Spoofing Private Key (Base64, uncompressed): ``8E8ulwhSIp/skZeg27xmWv2SxRxTOagypHrf2OdrhGY=``
       * Device Type: Input Device
       * Notification Type: Fast Pair
       * Data-Only connection: true
@@ -930,7 +930,7 @@ See :ref:`app_build_file_suffixes` and :ref:`cmake_options` for information abou
 
       * Device Name: NCS gaming mouse
       * Model ID: ``0x8E717D``
-      * Anti-Spoofing Private Key (base64, uncompressed): ``dZxFzP7X9CcfLPC0apyRkmgsh3n2EbWo9NFNXfVuxAM=``
+      * Anti-Spoofing Private Key (Base64, uncompressed): ``dZxFzP7X9CcfLPC0apyRkmgsh3n2EbWo9NFNXfVuxAM=``
       * Device Type: Mouse
       * Notification Type: Fast Pair
       * Data-Only connection: true

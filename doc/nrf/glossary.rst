@@ -135,10 +135,11 @@ Glossary
       A method of establishing a secure session between two network nodes, using the operational credentials obtained by the nodes during their commissioning into the network.
 
    Chain of Trust
+      A concept related to `Platform Security Architecture (PSA)`_.
       A sequence of properties identifying the trustworthiness of each layer in the system, all the way back to a property in the system referred to as :term:`Root of Trust (RoT)`.
       A secure system depends on building and maintaining a chain of trust through all the layers in the system.
       Each step in this chain guarantees that the next step can be trusted to have certain properties because any unauthorized modification of a subsequent step will be detected and the process halted.
-      You can read more about this concept in the :ref:`bootloader documentation <ug_bootloader_chain_of_trust>`.
+      You can read more about this concept in the |NCS| in the :ref:`bootloader documentation <ug_bootloader_chain_of_trust>`.
 
    Clear to Send (CTS)
       In :term:`flow control <Hardware Flow Control (HWFC)>`, the receiving end is ready and telling the far end to start sending.
@@ -226,6 +227,9 @@ Glossary
    Dynamic Voltage and Frequency Scaling (DVFS)
       A power management technique that allows adjusting the operating voltage and operating frequency of a CPU, depending on the workload.
 
+   Dynamic Host Configuration Protocol (DHCP)
+      A network management protocol used for automatic and centralized management of IP addresses within a network.
+
    Docker
       A set of software tools using OS-level virtualization to create and run applications and their dependencies in self-contained environments called :term:`Docker containers <Docker container>`.
 
@@ -258,6 +262,12 @@ Glossary
 
    Easy Direct Memory Access (EasyDMA)
       A module that some peripherals implement to gain direct access to data RAM.
+
+   Electromagnetic Compatibility (EMC)
+      A measure of how well electrical equipment coexists with its electromagnetic environment without causing or experiencing interference.
+
+   Electrostatic Discharge (ESD)
+      A sudden discharge of electric current between two electrically charged objects.
 
    Embedded Universal Integrated Circuit Card (eUICC)
       A component of a SIM card that enables switching Mobile Network Operators over-the-air.
@@ -655,6 +665,9 @@ Glossary
    Packet Traffic Arbitration (PTA)
       A collaborative coexistence mechanism for colocated wireless protocols.
 
+   Packet Error Rate (PER)
+      The number of incorrectly received data packets divided by the total number of received packets.
+
    Password-Authenticated Session Establishment (PASE)
       A method of establishing a secure session between two network nodes, using a pre-shared secret.
 
@@ -778,8 +791,10 @@ Glossary
       For more information, see :ref:`dm-revisions` and `Git revisions`_.
 
    Root of Trust (RoT)
+      A concept related to `Platform Security Architecture (PSA)`_.
       The property or component in a secure system that provides the foundation of a :term:`Chain of Trust`.
-      You can read more about this concept in the :ref:`bootloader documentation <ug_bootloader_chain_of_trust>`.
+      You can read more about this concept in the |NCS| in the :ref:`bootloader documentation <ug_bootloader_chain_of_trust>`.
+      See also `What is a Root of Trust?`_ on the PSA Certified website.
 
    Sample
       An implementation example that showcases a single feature or library.
@@ -861,6 +876,9 @@ Glossary
    Software Development Kit (SDK)
       A set of tools used for developing applications for a specific device or operating system.
 
+   Spectral Emission Mask (SEM)
+      A spectrum mask where the spectrum emissions should not be higher at any frequency offset than the values specified in the mask.
+
    Spin-Transfer Torque Magneto-Resistive Random Access Memory (MRAM (STT-MRAM))
       An alternative :term:`Non-volatile memory (NVM)` to flash memory.
       Compared to flash, MRAM does not have to be erased before writing and can simply be written, making it easier to use.
@@ -936,6 +954,9 @@ Glossary
 
    TrustZone
       Provides a cost-effective methodology to isolate security-critical components in an ARM Cortex CPU by hardware separating a rich operating system from smaller, secure operating system.
+
+   Two-wire Interface (TWI)
+      An I\ :sup:`2`\ C compatible serial communication protocol that enables devices to exchange data by using a two-wire bus system, allowing multiple devices to be connected and controlled by a master device.
 
    UART Hardware Flow Control (UART HWFC)
       A handshaking mechanism used to prevent a buffer overflow in the receiver (in embedded computing use cases).

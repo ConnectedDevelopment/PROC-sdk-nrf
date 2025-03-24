@@ -1,5 +1,9 @@
 # This is the Jenkins ci variant of the .github/labler.yaml
 
+"__EXCLUDE__":
+  - "**/VERSION"
+  - "**/*.rst"
+
 "CI-run-twister":
   - any:
       - "!.github/**/*"
@@ -8,7 +12,6 @@
       - "!test-manifests/**/*"
       - "!CODEOWNERS"
       - "!LICENSE"
-      - "!**/*.rst"
       - "!VERSION"
       - "!ncs_version.h.in"
 
@@ -376,6 +379,7 @@
   - "drivers/hw_cc3xx/*"
   - "drivers/entropy/*"
   - "modules/nrfxlib/nrf_802154/**/*"
+  - "modules/openthread/**/*"
 
 "CI-nfc-test":
   - "subsys/nfc/**/*"
@@ -576,19 +580,6 @@
   - "subsys/partition_manager/**/*"
   - "tests/subsys/net/lib/nrf_cloud/**/*"
 
-"CI-sidewalk-test":
-  - "subsys/bootloader/**/*"
-  - "subsys/partition_manager/**/*"
-  - "subsys/dfu/**/*"
-  - "modules/mcuboot/**/*"
-  - "subsys/fw_info/*"
-  - "subsys/pcd/**/*"
-  - "subsys/bluetooth/controller/*"
-  - any:
-      - "subsys/nrf_security/**/*"
-      - "!subsys/nrf_security/doc/**/*"
-      - "!subsys/nrf_security/*.rst"
-
 "CI-suit-dfu-test":
   - "include/bl*"
   - "include/fprotect.h"
@@ -620,24 +611,36 @@
   - "include/drivers/gpio/**/*"
   - "include/event_manager_proxy.h"
   - "subsys/event_manager_proxy/**/*"
-  - "samples/drivers/audio/**/*"
-  - "samples/drivers/i2c/**/*"
+  - "samples/zephyr/drivers/adc/**/*"
+  - "samples/zephyr/drivers/audio/**/*"
+  - "samples/zephyr/drivers/i2c/**/*"
+  - "samples/zephyr/drivers/watchdog/**/*"
+  - "samples/zephyr/boards/nordic/**/*"
   - "samples/ipc/**/*"
   - "samples/event_manager_proxy/**/*"
   - "samples/peripheral/lpuart/**/*"
-  - "samples/sensor/qdec/**/*"
-  - "samples/subsys/settings/**/*"
+  - "samples/zephyr/sensor/qdec/**/*"
+  - "samples/zephyr/subsys/settings/**/*"
   - "snippets/sdp/**/*"
   - "snippets/nrf54l09-switch-uart/**/*"
-  - "tests/subsys/event_manager_proxy/**/*"
   - "tests/benchmarks/multicore/idle/**/*"
+  - "tests/drivers/audio/**/*"
   - "tests/drivers/gpio/**/*"
   - "tests/drivers/lpuart/**/*"
   - "tests/drivers/pwm/**/*"
   - "tests/drivers/sensor/**/*"
-  - "tests/drivers/audio/**/*"
   - "tests/drivers/spi/**/*"
-  - "tests/drivers/i2c/**/*"
+  - "tests/drivers/uart/**/*"
+  - "tests/subsys/event_manager_proxy/**/*"
+  - "tests/zephyr/drivers/adc/**/*"
+  - "tests/zephyr/drivers/comparator/**/*"
+  - "tests/zephyr/drivers/gpio/**/*"
+  - "tests/zephyr/drivers/flash/**/*"
+  - "tests/zephyr/drivers/i2c/**/*"
+  - "tests/zephyr/drivers/mspi/**/*"
+  - "tests/zephyr/boards/nrf/**/*"
+  - "tests/zephyr/drivers/uart/**/*"
+  - "tests/zephyr/drivers/watchdog/**/*"
 
 "CI-ps-test":
   - "samples/nrf_rpc/protocols_serialization/**/*"

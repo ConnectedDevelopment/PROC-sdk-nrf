@@ -13,6 +13,7 @@
 #include <hal/nrf_vpr_csr.h>
 #include <hal/nrf_vpr_csr_vio.h>
 #include <hal/nrf_vpr_csr_vtim.h>
+#include <hal/nrf_timer.h>
 #include <haly/nrfy_gpio.h>
 
 #include <drivers/mspi/nrfe_mspi.h>
@@ -23,7 +24,15 @@
 #define DATA_PINS_MAX 8
 #define VIO_COUNT     11
 
-#define MAX_FREQUENCY 64000000
+/* Bellow this CNT0 period pin steering force has to be increased to produce correct waveform.
+ * CNT0 value 1 generates 32MHz clock.
+ */
+#define STD_PAD_BIAS_CNT0_THRESHOLD 1
+
+/* Max RX frequency is 21.333333MHz which corresponds to counter period value of 2. */
+#define RX_CNT0_MIN_VALUE 2
+
+#define PAD_BIAS_VALUE 1
 
 #define MAX_SHIFT_COUNT 63
 
@@ -35,6 +44,12 @@
 
 #define VEVIF_IRQN(vevif)   VEVIF_IRQN_1(vevif)
 #define VEVIF_IRQN_1(vevif) VPRCLIC_##vevif##_IRQn
+
+#ifdef CONFIG_SOC_NRF54L15
+#define NRF_GPIOHSPADCTRL ((NRF_GPIOHSPADCTRL_Type *)NRF_P2_S_BASE)
+#else
+#error "Unsupported SoC for SDP MSPI"
+#endif
 
 BUILD_ASSERT(CONFIG_SDP_MSPI_MAX_RESPONSE_SIZE > 0, "Response max size should be greater that 0");
 
@@ -76,6 +91,40 @@ static volatile uint8_t response_buffer[CONFIG_SDP_MSPI_MAX_RESPONSE_SIZE];
 
 static struct ipc_ept ep;
 static atomic_t ipc_atomic_sem = ATOMIC_INIT(0);
+#if defined(CONFIG_SDP_MSPI_FAULT_TIMER)
+static NRF_TIMER_Type *fault_timer;
+#endif
+static volatile uint32_t *cpuflpr_error_ctx_ptr =
+	(uint32_t *)DT_REG_ADDR(DT_NODELABEL(cpuflpr_error_code));
+
+static void distribute_last_word_bits(void)
+{
+	uint32_t *rx_data = (uint32_t *)xfer_params.xfer_data[HRT_FE_DATA].data;
+	uint32_t last_word = xfer_params.xfer_data[HRT_FE_DATA].last_word;
+	uint32_t word_count = xfer_params.xfer_data[HRT_FE_DATA].word_count;
+	uint32_t penultimate_word_bits =
+		xfer_params.xfer_data[HRT_FE_DATA].penultimate_word_clocks *
+		xfer_params.bus_widths.data;
+	uint32_t last_word_bits =
+		xfer_params.xfer_data[HRT_FE_DATA].last_word_clocks * xfer_params.bus_widths.data;
+	uint32_t penultimate_word_shift = BITS_IN_WORD - penultimate_word_bits;
+	/* In case when last word is too short, penultimate word has to give it 1 byte.
+	 * this is here to pass this byte back to penultimate word to avoid holes.
+	 */
+	if ((penultimate_word_shift != 0) && (word_count > 1)) {
+		rx_data[word_count - 2] = (rx_data[word_count - 2] >> penultimate_word_shift) |
+					  (last_word << penultimate_word_bits);
+		last_word = last_word >> penultimate_word_shift;
+	}
+
+	/* This is to avoid writing outside of data buffer in case when buffer_length%4 !=
+	 * 0.
+	 */
+	for (uint8_t byte = 0;
+	     byte < NRFX_CEIL_DIV(last_word_bits - penultimate_word_shift, BITS_IN_BYTE); byte++) {
+		((uint8_t *)&(rx_data[word_count - 1]))[byte] = ((uint8_t *)&last_word)[byte];
+	}
+}
 
 static void adjust_tail(volatile hrt_xfer_data_t *xfer_data, uint16_t frame_width,
 			uint32_t data_length)
@@ -162,19 +211,30 @@ static void configure_clock(enum mspi_cpp_mode cpp_mode)
 	}
 	}
 
-	WRITE_BIT(out, 3, VPRCSR_NORDIC_OUT_HIGH);
-	WRITE_BIT(out, 4, VPRCSR_NORDIC_OUT_HIGH);
-
 	nrf_vpr_csr_vio_out_set(out);
 	nrf_vpr_csr_vio_config_set(&vio_config);
 }
 
-static void xfer_execute(nrfe_mspi_xfer_packet_msg_t *xfer_packet)
+static void xfer_execute(nrfe_mspi_xfer_packet_msg_t *xfer_packet, volatile uint8_t *rx_buffer)
 {
+	nrf_vpr_csr_vio_config_t config;
 	volatile nrfe_mspi_dev_config_t *device =
 		&nrfe_mspi_devices[nrfe_mspi_xfer_config_ptr->device_index];
+	uint16_t dummy_cycles = 0;
 
-	xfer_params.counter_value = 4;
+	if (xfer_packet->opcode == NRFE_MSPI_TXRX) {
+		NRFX_ASSERT(device->cnt0_value >= RX_CNT0_MIN_VALUE);
+
+		nrf_vpr_csr_vio_config_get(&config);
+		config.input_sel = true;
+		nrf_vpr_csr_vio_config_set(&config);
+
+		dummy_cycles = nrfe_mspi_xfer_config_ptr->rx_dummy;
+	} else {
+		dummy_cycles = nrfe_mspi_xfer_config_ptr->tx_dummy;
+	}
+
+	xfer_params.counter_value = device->cnt0_value;
 	xfer_params.ce_vio = ce_vios[device->ce_index];
 	xfer_params.ce_hold = nrfe_mspi_xfer_config_ptr->hold_ce;
 	xfer_params.cpp_mode = device->cpp;
@@ -192,6 +252,7 @@ static void xfer_execute(nrfe_mspi_xfer_packet_msg_t *xfer_packet)
 		xfer_packet->address
 		<< (BITS_IN_WORD - nrfe_mspi_xfer_config_ptr->address_length * BITS_IN_BYTE);
 
+	/* Configure command phase. */
 	xfer_params.xfer_data[HRT_FE_COMMAND].fun_out = HRT_FUN_OUT_WORD;
 	xfer_params.xfer_data[HRT_FE_COMMAND].data = (uint8_t *)&xfer_packet->command;
 	xfer_params.xfer_data[HRT_FE_COMMAND].word_count = 0;
@@ -199,6 +260,7 @@ static void xfer_execute(nrfe_mspi_xfer_packet_msg_t *xfer_packet)
 	adjust_tail(&xfer_params.xfer_data[HRT_FE_COMMAND], xfer_params.bus_widths.command,
 		    nrfe_mspi_xfer_config_ptr->command_length * BITS_IN_BYTE);
 
+	/* Configure address phase. */
 	xfer_params.xfer_data[HRT_FE_ADDRESS].fun_out = HRT_FUN_OUT_WORD;
 	xfer_params.xfer_data[HRT_FE_ADDRESS].data = (uint8_t *)&xfer_packet->address;
 	xfer_params.xfer_data[HRT_FE_ADDRESS].word_count = 0;
@@ -206,6 +268,7 @@ static void xfer_execute(nrfe_mspi_xfer_packet_msg_t *xfer_packet)
 	adjust_tail(&xfer_params.xfer_data[HRT_FE_ADDRESS], xfer_params.bus_widths.address,
 		    nrfe_mspi_xfer_config_ptr->address_length * BITS_IN_BYTE);
 
+	/* Configure dummy_cycles phase. */
 	xfer_params.xfer_data[HRT_FE_DUMMY_CYCLES].fun_out = HRT_FUN_OUT_WORD;
 	xfer_params.xfer_data[HRT_FE_DUMMY_CYCLES].data = NULL;
 	xfer_params.xfer_data[HRT_FE_DUMMY_CYCLES].word_count = 0;
@@ -217,22 +280,29 @@ static void xfer_execute(nrfe_mspi_xfer_packet_msg_t *xfer_packet)
 	 * increasing shift count of last word in the previous part.
 	 * Beyond that, dummy cycles have to be treated af different transfer part.
 	 */
-	if (xfer_params.xfer_data[elem].last_word_clocks + nrfe_mspi_xfer_config_ptr->tx_dummy <=
-	    MAX_SHIFT_COUNT) {
-		xfer_params.xfer_data[elem].last_word_clocks += nrfe_mspi_xfer_config_ptr->tx_dummy;
+	if (xfer_params.xfer_data[elem].last_word_clocks + dummy_cycles <= MAX_SHIFT_COUNT) {
+		xfer_params.xfer_data[elem].last_word_clocks += dummy_cycles;
 	} else {
 		adjust_tail(&xfer_params.xfer_data[HRT_FE_DUMMY_CYCLES],
 			    xfer_params.bus_widths.dummy_cycles,
-			    nrfe_mspi_xfer_config_ptr->tx_dummy *
-				    xfer_params.bus_widths.dummy_cycles);
+			    dummy_cycles * xfer_params.bus_widths.dummy_cycles);
 	}
 
+	/* Configure data phase. */
 	xfer_params.xfer_data[HRT_FE_DATA].fun_out = HRT_FUN_OUT_BYTE;
-	xfer_params.xfer_data[HRT_FE_DATA].data = xfer_packet->data;
 	xfer_params.xfer_data[HRT_FE_DATA].word_count = 0;
+	if (xfer_packet->opcode == NRFE_MSPI_TXRX) {
+		xfer_params.xfer_data[HRT_FE_DATA].data = NULL;
 
-	adjust_tail(&xfer_params.xfer_data[HRT_FE_DATA], xfer_params.bus_widths.data,
-		    xfer_packet->num_bytes * BITS_IN_BYTE);
+		adjust_tail(&xfer_params.xfer_data[HRT_FE_DATA], xfer_params.bus_widths.data,
+			    xfer_packet->num_bytes * BITS_IN_BYTE);
+
+		xfer_params.xfer_data[HRT_FE_DATA].data = rx_buffer;
+	} else {
+		xfer_params.xfer_data[HRT_FE_DATA].data = xfer_packet->data;
+		adjust_tail(&xfer_params.xfer_data[HRT_FE_DATA], xfer_params.bus_widths.data,
+			    xfer_packet->num_bytes * BITS_IN_BYTE);
+	}
 
 	/* Hardware issue: Additional clock edge when transmitting in modes other
 	 *                 than MSPI_CPP_MODE_0.
@@ -241,65 +311,27 @@ static void xfer_execute(nrfe_mspi_xfer_packet_msg_t *xfer_packet)
 	 *             and disable clock before the last pulse.
 	 */
 	if (device->cpp == MSPI_CPP_MODE_2) {
-		for (uint8_t i = 0; i < HRT_FE_MAX; i++) {
-			if (xfer_params.xfer_data[HRT_FE_MAX - 1 - i].word_count != 0) {
-				xfer_params.xfer_data[HRT_FE_MAX - 1 - i].last_word_clocks++;
+		/* Ommit data phase in rx mode */
+		for (uint8_t phase = xfer_packet->opcode == NRFE_MSPI_TXRX ? 1 : 0;
+		     phase < HRT_FE_MAX; phase++) {
+			if (xfer_params.xfer_data[HRT_FE_MAX - 1 - phase].word_count != 0) {
+				xfer_params.xfer_data[HRT_FE_MAX - 1 - phase].last_word_clocks++;
 				break;
 			}
 		}
 	}
 
-	nrf_vpr_clic_int_pending_set(NRF_VPRCLIC, VEVIF_IRQN(HRT_VEVIF_IDX_WRITE));
-}
-
-void prepare_and_read_data(nrfe_mspi_xfer_packet_msg_t *xfer_packet, volatile uint8_t *buffer)
-{
-	volatile nrfe_mspi_dev_config_t *device =
-		&nrfe_mspi_devices[nrfe_mspi_xfer_config_ptr->device_index];
-	nrf_vpr_csr_vio_config_t config;
-
-	xfer_params.counter_value = 4;
-	xfer_params.ce_vio = ce_vios[device->ce_index];
-	xfer_params.ce_hold = nrfe_mspi_xfer_config_ptr->hold_ce;
-	xfer_params.ce_polarity = device->ce_polarity;
-	xfer_params.bus_widths = io_modes[device->io_mode];
-	xfer_params.xfer_data[HRT_FE_DATA].data = buffer;
-
-	nrf_vpr_csr_vio_config_get(&config);
-	config.input_sel = true;
-	nrf_vpr_csr_vio_config_set(&config);
-
-	/*
-	 * Fix position of command and address if command/address length is < BITS_IN_WORD,
-	 * so that leading zeros would not be printed instead of data bits.
-	 */
-	xfer_packet->command =
-		xfer_packet->command
-		<< (BITS_IN_WORD - nrfe_mspi_xfer_config_ptr->command_length * BITS_IN_BYTE);
-	xfer_packet->address =
-		xfer_packet->address
-		<< (BITS_IN_WORD - nrfe_mspi_xfer_config_ptr->address_length * BITS_IN_BYTE);
-
-	/* Configure command phase. */
-	xfer_params.xfer_data[HRT_FE_COMMAND].fun_out = HRT_FUN_OUT_WORD;
-	xfer_params.xfer_data[HRT_FE_COMMAND].data = (uint8_t *)&xfer_packet->command;
-	xfer_params.xfer_data[HRT_FE_COMMAND].word_count =
-		nrfe_mspi_xfer_config_ptr->command_length;
-
-	/* Configure address phase. */
-	xfer_params.xfer_data[HRT_FE_ADDRESS].fun_out = HRT_FUN_OUT_WORD;
-	xfer_params.xfer_data[HRT_FE_ADDRESS].data = (uint8_t *)&xfer_packet->address;
-	xfer_params.xfer_data[HRT_FE_ADDRESS].word_count =
-		nrfe_mspi_xfer_config_ptr->address_length;
-
-	/* Configure data phase. */
-	xfer_params.xfer_data[HRT_FE_DATA].word_count = xfer_packet->num_bytes;
-
 	/* Read/write barrier to make sure that all configuration is done before jumping to HRT. */
 	nrf_barrier_rw();
 
-	/* Read data */
-	nrf_vpr_clic_int_pending_set(NRF_VPRCLIC, VEVIF_IRQN(HRT_VEVIF_IDX_READ));
+	if (xfer_packet->opcode == NRFE_MSPI_TXRX) {
+		nrf_vpr_clic_int_pending_set(NRF_VPRCLIC, VEVIF_IRQN(HRT_VEVIF_IDX_READ));
+
+		distribute_last_word_bits();
+
+	} else {
+		nrf_vpr_clic_int_pending_set(NRF_VPRCLIC, VEVIF_IRQN(HRT_VEVIF_IDX_WRITE));
+	}
 }
 
 static void config_pins(nrfe_mspi_pinctrl_soc_pin_msg_t *pins_cfg)
@@ -313,9 +345,13 @@ static void config_pins(nrfe_mspi_pinctrl_soc_pin_msg_t *pins_cfg)
 		uint32_t psel = NRF_GET_PIN(pins_cfg->pin[i]);
 		uint32_t fun = NRF_GET_FUN(pins_cfg->pin[i]);
 
+		if ((psel == NRF_PIN_DISCONNECTED) || (pins_cfg->pin[i] == 0)) {
+			continue;
+		}
+
 		uint8_t pin_number = NRF_PIN_NUMBER_TO_PIN(psel);
 
-		NRFX_ASSERT(pin_number < VIO_COUNT)
+		NRFX_ASSERT(pin_number < VIO_COUNT);
 
 		if ((fun >= NRF_FUN_SDP_MSPI_CS0) && (fun <= NRF_FUN_SDP_MSPI_CS4)) {
 
@@ -364,13 +400,25 @@ static void ep_recv(const void *data, size_t len, void *priv)
 
 	(void)priv;
 	(void)len;
-	nrfe_mspi_flpr_response_msg_t response;
 	uint8_t opcode = *(uint8_t *)data;
 	uint32_t num_bytes = 0;
 
-	response.opcode = opcode;
+#if defined(CONFIG_SDP_MSPI_FAULT_TIMER)
+	if (fault_timer != NULL) {
+		nrf_timer_task_trigger(fault_timer, NRF_TIMER_TASK_START);
+	}
+#endif
 
 	switch (opcode) {
+#if defined(CONFIG_SDP_MSPI_FAULT_TIMER)
+	case NRFE_MSPI_CONFIG_TIMER_PTR: {
+		const nrfe_mspi_flpr_timer_msg_t *timer_data =
+			(const nrfe_mspi_flpr_timer_msg_t *)data;
+
+		fault_timer = timer_data->timer_ptr;
+		break;
+	}
+#endif
 	case NRFE_MSPI_CONFIG_PINS: {
 		nrfe_mspi_pinctrl_soc_pin_msg_t *pins_cfg = (nrfe_mspi_pinctrl_soc_pin_msg_t *)data;
 
@@ -385,7 +433,6 @@ static void ep_recv(const void *data, size_t len, void *priv)
 		NRFX_ASSERT(dev_config->dev_config.cpp <= MSPI_CPP_MODE_3);
 		NRFX_ASSERT(dev_config->dev_config.ce_index < ce_vios_count);
 		NRFX_ASSERT(dev_config->dev_config.ce_polarity <= MSPI_CE_ACTIVE_HIGH);
-		NRFX_ASSERT(dev_config->dev_config.freq <= MAX_FREQUENCY);
 
 		nrfe_mspi_devices[dev_config->device_index] = dev_config->dev_config;
 
@@ -396,6 +443,14 @@ static void ep_recv(const void *data, size_t len, void *priv)
 		} else {
 			nrf_vpr_csr_vio_out_clear_set(
 				BIT(ce_vios[nrfe_mspi_devices[dev_config->device_index].ce_index]));
+		}
+
+		if (dev_config->dev_config.io_mode == MSPI_IO_MODE_SINGLE) {
+			nrf_vpr_csr_vio_out_or_set(BIT(3));
+			nrf_vpr_csr_vio_out_or_set(BIT(4));
+		} else {
+			nrf_vpr_csr_vio_out_clear_set(BIT(3));
+			nrf_vpr_csr_vio_out_clear_set(BIT(4));
 		}
 
 		break;
@@ -419,19 +474,31 @@ static void ep_recv(const void *data, size_t len, void *priv)
 		nrfe_mspi_xfer_config = xfer_config->xfer_config;
 #endif
 		configure_clock(nrfe_mspi_devices[nrfe_mspi_xfer_config_ptr->device_index].cpp);
+
+		/* Tune up pad bias for frequencies above 32MHz */
+		if (nrfe_mspi_devices[nrfe_mspi_xfer_config_ptr->device_index].cnt0_value <=
+		    STD_PAD_BIAS_CNT0_THRESHOLD) {
+			NRF_GPIOHSPADCTRL->BIAS = PAD_BIAS_VALUE;
+		}
+
 		break;
 	}
 	case NRFE_MSPI_TX:
 		nrfe_mspi_xfer_packet_msg_t *packet = (nrfe_mspi_xfer_packet_msg_t *)data;
 
-		xfer_execute(packet);
+		xfer_execute(packet, NULL);
 		break;
 	case NRFE_MSPI_TXRX: {
 		nrfe_mspi_xfer_packet_msg_t *packet = (nrfe_mspi_xfer_packet_msg_t *)data;
-		num_bytes = packet->num_bytes;
-
-		if (num_bytes > 0) {
-			prepare_and_read_data(packet, response_buffer + 1);
+		if (packet->num_bytes > 0) {
+#ifdef CONFIG_SDP_MSPI_IPC_NO_COPY
+			xfer_execute(packet, packet->data);
+#else
+			NRFX_ASSERT(packet->num_bytes <=
+				    CONFIG_SDP_MSPI_MAX_RESPONSE_SIZE - sizeof(nrfe_mspi_opcode_t));
+			num_bytes = packet->num_bytes;
+			xfer_execute(packet, response_buffer + sizeof(nrfe_mspi_opcode_t));
+#endif
 		}
 		break;
 	}
@@ -441,7 +508,15 @@ static void ep_recv(const void *data, size_t len, void *priv)
 	}
 
 	response_buffer[0] = opcode;
-	ipc_service_send(&ep, (const void *)response_buffer, sizeof(opcode) + num_bytes);
+	ipc_service_send(&ep, (const void *)response_buffer,
+			 sizeof(nrfe_mspi_opcode_t) + num_bytes);
+
+#if defined(CONFIG_SDP_MSPI_FAULT_TIMER)
+	if (fault_timer != NULL) {
+		nrf_timer_task_trigger(fault_timer, NRF_TIMER_TASK_CLEAR);
+		nrf_timer_task_trigger(fault_timer, NRF_TIMER_TASK_STOP);
+	}
+#endif
 }
 
 static const struct ipc_ept_cfg ep_cfg = {
@@ -487,13 +562,106 @@ __attribute__((interrupt)) void hrt_handler_read(void)
 
 __attribute__((interrupt)) void hrt_handler_write(void)
 {
-	hrt_write((hrt_xfer_t *)&xfer_params);
+	hrt_write(&xfer_params);
+}
+
+/**
+ * @brief Trap handler for SDP application.
+ *
+ * @details
+ * This function is called on unhandled CPU exceptions. It's a good place to
+ * handle critical errors and notify the core that the SDP application has
+ * crashed.
+ *
+ * @param mcause  - cause of the exception (from mcause register)
+ * @param mepc    - address of the instruction that caused the exception (from mepc register)
+ * @param mtval   - additional value (e.g. bad address)
+ * @param context - pointer to the saved context (only some registers are saved - ra, t0, t1, t2)
+ */
+void trap_handler(uint32_t mcause, uint32_t mepc, uint32_t mtval, void *context)
+{
+	const uint8_t fault_opcode = NRFE_MSPI_SDP_APP_HARD_FAULT;
+
+	/* It can be distinguish whether the exception was caused by an interrupt or an error:
+	 * On RV32, bit 31 of the mcause register indicates whether the event is an interrupt.
+	 */
+	if (mcause & 0x80000000) {
+		/* Interrupt – can be handled or ignored */
+	} else {
+		/* Exception – critical error */
+	}
+
+	cpuflpr_error_ctx_ptr[0] = mcause;
+	cpuflpr_error_ctx_ptr[1] = mepc;
+	cpuflpr_error_ctx_ptr[2] = mtval;
+	cpuflpr_error_ctx_ptr[3] = (uint32_t)context;
+
+	ipc_service_send(&ep, &fault_opcode, sizeof(fault_opcode));
+
+	while (1) {
+		/* Loop forever */
+	}
+}
+
+/* The trap_entry function is the entry point for exception handling.
+ * The naked attribute prevents the compiler from generating an automatic prologue/epilogue.
+ */
+__attribute__((naked)) void trap_entry(void)
+{
+	__asm__ volatile(
+		/* Reserve space on the stack:
+		 * 16 bytes for 4 registers context (ra, t0, t1, t2).
+		 */
+		"addi sp, sp, -16\n"
+		"sw   ra, 12(sp)\n"
+		"sw   t0, 8(sp)\n"
+		"sw   t1, 4(sp)\n"
+		"sw   t2, 0(sp)\n"
+
+		/* Read CSR: mcause, mepc, mtval */
+		"csrr t0, mcause\n" /* t0 = mcause */
+		"csrr t1, mepc\n"   /* t1 = mepc   */
+		"csrr t2, mtval\n"  /* t2 = mtval  */
+
+		/* Prepare arguments for trap_handler function:
+		 * a0 = mcause (t0), a1 = mepc (t1), a2 = mtval (t2), a3 = sp (pointer on context).
+		 */
+		"mv   a0, t0\n"
+		"mv   a1, t1\n"
+		"mv   a2, t2\n"
+		"mv   a3, sp\n"
+
+		"call trap_handler\n"
+
+		/* Restore registers values */
+		"lw   ra, 12(sp)\n"
+		"lw   t0, 8(sp)\n"
+		"lw   t1, 4(sp)\n"
+		"lw   t2, 0(sp)\n"
+		"addi sp, sp, 16\n"
+
+		"mret\n");
+}
+
+void init_trap_handler(void)
+{
+	/* Write the address of the trap_entry function into the mtvec CSR.
+	 * Note: On RV32, the address must be aligned to 4 bytes.
+	 */
+	uintptr_t trap_entry_addr = (uintptr_t)&trap_entry;
+
+	__asm__ volatile("csrw mtvec, %0\n"
+			 : /* no outs */
+			 : "r"(trap_entry_addr));
 }
 
 int main(void)
 {
-	int ret = backend_init();
+	int ret = 0;
 
+	init_trap_handler();
+
+	ret = backend_init();
 	if (ret < 0) {
 		return 0;
 	}

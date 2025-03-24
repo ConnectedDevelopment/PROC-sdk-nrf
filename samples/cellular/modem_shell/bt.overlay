@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
-#include <nrf9160/nrf9160dk_nrf52840_reset_on_if5.dtsi>
+#include <nrf9160/nrf9160dk_nrf52840_reset_on_if9.dtsi>
 
 / {
 	chosen {
-		zephyr,bt-uart = &lpuart;
 		zephyr,bt-hci = &bt_hci_uart;
 	};
 };

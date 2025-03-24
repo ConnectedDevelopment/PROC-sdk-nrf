@@ -50,6 +50,20 @@ constexpr uint32_t kSwitchTransportTimeout = 10000;
 
 #define APPLICATION_BUTTON_MASK DK_BTN2_MSK
 #define SWITCHING_BUTTON_MASK DK_BTN3_MSK
+
+#ifndef CONFIG_CHIP_FACTORY_RESET_ERASE_SETTINGS
+void AppFactoryResetHandler(const ChipDeviceEvent *event, intptr_t /* unused */)
+{
+	switch (event->Type) {
+	case DeviceEventType::kFactoryReset:
+		BoltLockMgr().FactoryReset();
+		break;
+	default:
+		break;
+	}
+}
+#endif
+
 } /* namespace */
 
 Identify sIdentify = { kLockEndpointId, AppTask::IdentifyStartHandler, AppTask::IdentifyStopHandler,
@@ -116,9 +130,9 @@ void AppTask::SwitchTransportTriggerHandler(const SwitchButtonAction &action)
 }
 #endif
 
-void AppTask::LockStateChanged(BoltLockManager::State state, BoltLockManager::OperationSource source)
+void AppTask::LockStateChanged(const BoltLockManager::StateData &stateData)
 {
-	switch (state) {
+	switch (stateData.mState) {
 	case BoltLockManager::State::kLockingInitiated:
 		LOG_INF("Lock action initiated");
 		Nrf::GetBoard().GetLED(Nrf::DeviceLeds::LED2).Blink(50, 50);
@@ -150,14 +164,36 @@ void AppTask::LockStateChanged(BoltLockManager::State state, BoltLockManager::Op
 	}
 
 	/* Handle changing attribute state in the application */
-	Instance().UpdateClusterState(state, source);
+	Instance().UpdateClusterState(stateData);
 }
 
-void AppTask::UpdateClusterState(BoltLockManager::State state, BoltLockManager::OperationSource source)
+void AppTask::UpdateClusterState(const BoltLockManager::StateData &stateData)
 {
+	BoltLockManager::StateData *stateDataCopy = Platform::New<BoltLockManager::StateData>(stateData);
+
+	if (stateDataCopy == nullptr) {
+		LOG_ERR("Failed to allocate memory for BoltLockManager::StateData");
+		return;
+	}
+
+	CHIP_ERROR err = SystemLayer().ScheduleLambda([stateDataCopy]() {
+		UpdateClusterStateHandler(*stateDataCopy);
+		Platform::Delete(stateDataCopy);
+	});
+
+	if (err != CHIP_NO_ERROR) {
+		LOG_ERR("Failed to schedule lambda: %" CHIP_ERROR_FORMAT, err.Format());
+		Platform::Delete(stateDataCopy);
+	}
+}
+
+void AppTask::UpdateClusterStateHandler(const BoltLockManager::StateData &stateData)
+{
+	using namespace chip::app::Clusters::DoorLock::Attributes;
+
 	DlLockState newLockState;
 
-	switch (state) {
+	switch (stateData.mState) {
 	case BoltLockManager::State::kLockingCompleted:
 		newLockState = DlLockState::kLocked;
 		break;
@@ -169,29 +205,43 @@ void AppTask::UpdateClusterState(BoltLockManager::State state, BoltLockManager::
 		break;
 	}
 
-	SystemLayer().ScheduleLambda([newLockState, source] {
-		chip::app::DataModel::Nullable<chip::app::Clusters::DoorLock::DlLockState> currentLockState;
-		chip::app::Clusters::DoorLock::Attributes::LockState::Get(kLockEndpointId, currentLockState);
+	Nullable<DlLockState> currentLockState;
+	LockState::Get(kLockEndpointId, currentLockState);
 
-		if (currentLockState.IsNull()) {
-			/* Initialize lock state with start value, but not invoke lock/unlock. */
-			chip::app::Clusters::DoorLock::Attributes::LockState::Set(kLockEndpointId, newLockState);
-		} else {
-			LOG_INF("Updating LockState attribute");
+	if (currentLockState.IsNull()) {
+		/* Initialize lock state with start value, but not invoke lock/unlock. */
+		LockState::Set(kLockEndpointId, newLockState);
+	} else {
+		LOG_INF("Updating LockState attribute");
 
-			if (!DoorLockServer::Instance().SetLockState(kLockEndpointId, newLockState, source)) {
-				LOG_ERR("Failed to update LockState attribute");
-			}
+		Nullable<uint16_t> userId;
+		Nullable<List<const LockOpCredentials>> credentials;
+		List<const LockOpCredentials> credentialList;
+
+		if (!stateData.mValidatePINResult.IsNull()) {
+			userId = { stateData.mValidatePINResult.Value().mUserId };
+
+			/* `DoorLockServer::SetLockState` exptects list of `LockOpCredentials`,
+			   however in case of PIN validation it makes no sense to have more than one
+			   credential corresponding to validation result. For simplicity we wrap single
+			   credential in list here. */
+			credentialList = { &stateData.mValidatePINResult.Value().mCredential, 1 };
+			credentials = { credentialList };
 		}
-	});
+
+		if (!DoorLockServer::Instance().SetLockState(kLockEndpointId, newLockState, stateData.mSource, userId,
+							     credentials, stateData.mFabricIdx, stateData.mNodeId)) {
+			LOG_ERR("Failed to update LockState attribute");
+		}
+	}
 }
 
 #ifdef CONFIG_CHIP_NUS
 void AppTask::NUSLockCallback(void *context)
 {
 	LOG_DBG("Received LOCK command from NUS");
-	if (BoltLockMgr().mState == BoltLockManager::State::kLockingCompleted ||
-	    BoltLockMgr().mState == BoltLockManager::State::kLockingInitiated) {
+	if (BoltLockMgr().GetState().mState == BoltLockManager::State::kLockingCompleted ||
+	    BoltLockMgr().GetState().mState == BoltLockManager::State::kLockingInitiated) {
 		LOG_INF("Device is already locked");
 	} else {
 		Nrf::PostTask([] { LockActionEventHandler(); });
@@ -201,8 +251,8 @@ void AppTask::NUSLockCallback(void *context)
 void AppTask::NUSUnlockCallback(void *context)
 {
 	LOG_DBG("Received UNLOCK command from NUS");
-	if (BoltLockMgr().mState == BoltLockManager::State::kUnlockingCompleted ||
-	    BoltLockMgr().mState == BoltLockManager::State::kUnlockingInitiated) {
+	if (BoltLockMgr().GetState().mState == BoltLockManager::State::kUnlockingCompleted ||
+	    BoltLockMgr().GetState().mState == BoltLockManager::State::kUnlockingInitiated) {
 		LOG_INF("Device is already unlocked");
 	} else {
 		Nrf::PostTask([] { LockActionEventHandler(); });
@@ -241,6 +291,14 @@ CHIP_ERROR AppTask::Init()
 	/* Register Matter event handler that controls the connectivity status LED based on the captured Matter network
 	 * state. */
 	ReturnErrorOnFailure(Nrf::Matter::RegisterEventHandler(Nrf::Board::DefaultMatterEventHandler, 0));
+
+#ifndef CONFIG_CHIP_FACTORY_RESET_ERASE_SETTINGS
+	/* Register factory reset event handler.
+	 * With this configuration we have to manually clean up the storage,
+	 * as whole settings partition won't be erased.
+	 * */
+	ReturnErrorOnFailure(Nrf::Matter::RegisterEventHandler(AppFactoryResetHandler, 0));
+#endif
 
 #ifdef CONFIG_THREAD_WIFI_SWITCHING
 	CHIP_ERROR err = ThreadWifiSwitch::StartCurrentTransport();

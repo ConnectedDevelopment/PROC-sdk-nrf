@@ -77,6 +77,10 @@ if (CONFIG_NRF_MODEM_LIB)
   ncs_add_partition_manager_config(pm.yml.libmodem)
 endif()
 
+if(CONFIG_SOC_NRF54L15_CPUAPP)
+  ncs_add_partition_manager_config(pm.yml.bootconf)
+endif()
+
 # The default DTS configuration for the nRF5340 CPUAPP includes the
 # the shared SRAM region, so, inform the partition manager about this
 # region.
@@ -127,7 +131,7 @@ if (CONFIG_NRF_MODEM_LIB_TRACE_BACKEND_FLASH)
   ncs_add_partition_manager_config(pm.yml.modem_trace)
 endif()
 
-if (CONFIG_SOC_NRF54L15_CPUFLPR OR CONFIG_SOC_NRF7120_ENGA_CPUFLPR)
+if (CONFIG_SOC_NRF54L15_CPUFLPR OR CONFIG_SOC_NRF54L20_ENGA_CPUFLPR OR CONFIG_SOC_NRF7120_ENGA_CPUFLPR)
   ncs_add_partition_manager_config(pm.yml.vpr_launcher)
 endif()
 

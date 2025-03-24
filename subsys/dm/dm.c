@@ -60,7 +60,7 @@ LOG_MODULE_REGISTER(nrf_dm, CONFIG_DM_MODULE_LOG_LEVEL);
 #define DM_THREAD_STACK_SIZE         1536
 #endif
 
-#define DM_TIMESLOT_OVERHEAD_US      400
+#define DM_TIMESLOT_OVERHEAD_US      420
 #define DM_REFLECTOR_OVERHEAD_US     2000
 
 static K_MUTEX_DEFINE(ranging_mtx);
@@ -207,7 +207,11 @@ static mpsl_timeslot_signal_return_param_t *mpsl_timeslot_callback(
 		dm_api_call = TIMESLOT_RESCHEDULE;
 		k_msgq_put(&dm_api_msgq, &dm_api_call, K_NO_WAIT);
 		break;
+	case MPSL_TIMESLOT_SIGNAL_OVERSTAYED:
+		LOG_ERR("overstayed the timeslot: consider increasing DM_TIMESLOT_OVERHEAD_US");
+		break;
 	default:
+		LOG_ERR("Unexpected timeslot signal (%u)", signal_type);
 		break;
 	}
 

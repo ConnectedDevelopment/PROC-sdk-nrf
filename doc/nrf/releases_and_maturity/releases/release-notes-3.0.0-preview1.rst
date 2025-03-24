@@ -20,7 +20,7 @@ Known issues
 ************
 
 Known issues are only tracked for the latest official release.
-See `known issues for nRF Connect SDK v2.9.0-nRF54H20-1-rc2`_ for the list of issues valid for the latest release.
+See `known issues for nRF Connect SDK v2.9.0-nRF54H20-1`_ for the list of issues valid for the latest release.
 
 Changelog
 *********
@@ -254,8 +254,6 @@ nRF Desktop
 * Added:
 
   * System Power Management for the :ref:`zephyr:nrf54h20dk_nrf54h20` board target on the application and radio cores.
-    The application still has high power consumption as the Bluetooth LE controller running on the radio core requires disabling MRAM latency (:kconfig:option:`CONFIG_MRAM_LATENCY_AUTO_REQ`).
-    Enabling MRAM latency makes the Bluetooth LE controller unstable.
   * Application configurations for the nRF54L05 and nRF54L10 SoCs (emulated on the nRF54L15 DK).
     The configurations are supported through ``nrf54l15dk/nrf54l10/cpuapp`` and ``nrf54l15dk/nrf54l05/cpuapp`` board targets.
     For details, see the :ref:`nrf_desktop_board_configuration`.

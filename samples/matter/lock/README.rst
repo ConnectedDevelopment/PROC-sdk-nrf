@@ -43,8 +43,8 @@ IPv6 network support
 
 The development kits for this sample offer the following IPv6 network support for Matter:
 
-* Matter over Thread is supported for ``nrf52840dk/nrf52840``, ``nrf5340dk/nrf5340/cpuapp``, ``nrf21540dk/nrf52840``, and ``nrf54h20dk/nrf54h20/cpuapp``.
-* Matter over Wi-Fi is supported for ``nrf5340dk/nrf5340/cpuapp`` or ``nrf54h20dk/nrf54h20/cpuapp`` with the ``nrf7002ek`` shield attached, for ``nrf7002dk/nrf5340/cpuapp`` (2.4 GHz and 5 GHz), or for ``nrf7002dk/nrf5340/cpuapp/nrf7001`` (2.4 GHz only).
+* Matter over Thread is supported for the ``nrf52840dk/nrf52840``, ``nrf5340dk/nrf5340/cpuapp``, ``nrf21540dk/nrf52840``, and ``nrf54l15dk/nrf54l15/cpuapp`` board targets.
+* Matter over Wi-Fi is supported for the ``nrf5340dk/nrf5340/cpuapp`` board target with the ``nrf7002ek`` shield attached, for the ``nrf7002dk/nrf5340/cpuapp`` (2.4 GHz and 5 GHz), or ``nrf7002dk/nrf5340/cpuapp/nrf7001`` board targets (2.4 GHz only).
 * :ref:`Switching between Matter over Thread and Matter over Wi-Fi <matter_lock_sample_wifi_thread_switching>` is supported for ``nrf5340dk/nrf5340/cpuapp`` with the ``nrf7002ek`` shield attached, using the :ref:`switched Thread and Wi-Fi configuration <matter_lock_sample_custom_configs>`.
 
 Overview
@@ -277,61 +277,82 @@ The following snippet is available:
 
 .. _matter_lock_sample_configuration_dfu:
 
+Advanced configuration options
+==============================
+
+This section describes other configuration options for the sample.
+
 Device Firmware Upgrade support
-===============================
+-------------------------------
 
 .. |Bluetooth| replace:: Bluetooth
 
 .. matter_door_lock_sample_build_with_dfu_start
 
-.. note::
-   You can enable over-the-air Device Firmware Upgrade only on hardware platforms that have external flash memory.
-   Currently only nRF52840 DK, nRF5340 DK, nRF7002 DK and nRF54L15 DK support Device Firmware Upgrade feature.
+.. toggle::
 
-The sample supports over-the-air (OTA) device firmware upgrade (DFU) using one of the two following protocols:
+   .. note::
+      You can enable over-the-air Device Firmware Upgrade only on hardware platforms that have external flash memory.
+      Currently only nRF52840 DK, nRF5340 DK, nRF7002 DK and nRF54L15 DK support Device Firmware Upgrade feature.
 
-* Matter OTA update protocol that uses the Matter operational network for querying and downloading a new firmware image.
-* Simple Management Protocol (SMP) over |Bluetooth| LE.
-  In this case, the DFU can be done either using a smartphone application or a PC command line tool.
-  Note that this protocol is not part of the Matter specification.
+   The sample supports over-the-air (OTA) device firmware upgrade (DFU) using one of the two following protocols:
 
-In both cases, :ref:`MCUboot <mcuboot:mcuboot_wrapper>` secure bootloader is used to apply the new firmware image.
+   * Matter OTA update protocol that uses the Matter operational network for querying and downloading a new firmware image.
+   * Simple Management Protocol (SMP) over |Bluetooth| LE.
+     In this case, the DFU can be done either using a smartphone application or a PC command line tool.
+     Note that this protocol is not part of the Matter specification.
 
-The DFU over Matter is enabled by default.
-The following configuration arguments are available during the build process for configuring DFU:
+   In both cases, :ref:`MCUboot <mcuboot:mcuboot_wrapper>` secure bootloader is used to apply the new firmware image.
 
-* To configure the sample to support the DFU over Matter and SMP, use the ``-DCONFIG_CHIP_DFU_OVER_BT_SMP=y`` build flag.
+   The DFU over Matter is enabled by default.
+   The following configuration arguments are available during the build process for configuring DFU:
 
-See :ref:`cmake_options` for instructions on how to add these options to your build.
+   * To configure the sample to support the DFU over Matter and SMP, use the ``-DCONFIG_CHIP_DFU_OVER_BT_SMP=y`` build flag.
 
-When building on the command line, run the following command with *board_target* replaced with the board target name of the hardware platform you are using (see `Requirements`_), and *dfu_build_flag* replaced with the desired DFU build flag:
+   See :ref:`cmake_options` for instructions on how to add these options to your build.
 
-.. parsed-literal::
-   :class: highlight
+   When building on the command line, run the following command with *board_target* replaced with the board target name of the hardware platform you are using (see `Requirements`_), and *dfu_build_flag* replaced with the desired DFU build flag:
 
-   west build -b *board_target* -- *dfu_build_flag*
+   .. parsed-literal::
+      :class: highlight
 
-For example:
+      west build -b *board_target* -- *dfu_build_flag*
 
-.. code-block:: console
+   For example:
 
-   west build -b nrf52840dk/nrf52840 -- -DCONFIG_CHIP_DFU_OVER_BT_SMP=y
+   .. code-block:: console
+
+      west build -b nrf52840dk/nrf52840 -- -DCONFIG_CHIP_DFU_OVER_BT_SMP=y
 
 .. matter_door_lock_sample_build_with_dfu_end
-
-SUIT DFU on nRF54H20
---------------------
-
-.. include:: ../template/README.rst
-    :start-after: matter_template_dfu_suit_start
-    :end-before: matter_template_dfu_suit_end
 
 .. _matter_lock_sample_configuration_fem:
 
 FEM support
-===========
+-----------
 
-.. include:: /includes/sample_fem_support.txt
+.. toggle::
+
+   .. include:: /includes/sample_fem_support.txt
+
+Factory data support
+--------------------
+
+.. matter_door_lock_sample_factory_data_start
+
+.. toggle::
+
+   In this sample, the factory data support is enabled by default for all configurations except for the target board nRF21540 DK.
+   This means that a new factory data set will be automatically generated when building for the target board.
+
+   To disable factory data support, set the following Kconfig options to ``n``:
+
+   * :kconfig:option:`CONFIG_CHIP_FACTORY_DATA`
+   * ``SB_CONFIG_MATTER_FACTORY_DATA_GENERATE``
+
+   To learn more about factory data, read the :doc:`matter:nrfconnect_factory_data_configuration` page in the Matter documentation.
+
+   .. matter_door_lock_sample_factory_data_end
 
 .. _matter_lock_sample_configuration_nus:
 
@@ -356,61 +377,6 @@ The PIN code is different depending on the :ref:`configuration <matter_lock_samp
 * In the release configuration, the secure PIN is set to ``123456`` due to lack of a different way of showing it on nRF boards other than in the log console.
 
 See `Testing door lock using Bluetooth LE with Nordic UART Service`_ for more information about how to test this feature.
-
-Factory data support
-====================
-
-.. matter_door_lock_sample_factory_data_start
-
-In this sample, the factory data support is enabled by default for all configurations except for the target board nRF21540 DK.
-This means that a new factory data set will be automatically generated when building for the target board.
-
-To disable factory data support, set the following Kconfig options to ``n``:
-
-   * :kconfig:option:`CONFIG_CHIP_FACTORY_DATA`
-   * ``SB_CONFIG_MATTER_FACTORY_DATA_GENERATE``
-
-To learn more about factory data, read the :doc:`matter:nrfconnect_factory_data_configuration` page in the Matter documentation.
-
-.. matter_door_lock_sample_factory_data_end
-
-.. matter_door_lock_sample_factory_data_nrf54h20_start
-
-Merging the factory data hex file with the firmware hex file is currently not available on the nRF54H20 DK.
-The factory data support is disabled by default on this board.
-You can still use it, but you need to flash the :file:`factory_data.hex` file manually.
-
-To use factory data on the nRF54H20 DK, complete the following steps:
-
-1. Flash the :file:`factory_data.hex` file into the device using the following command:
-
-   .. code-block:: console
-
-      nrfutil device program --firmware build/template/zephyr/factory_data.hex
-
-#. Enable factory data support by building the sample with the :kconfig:option:`CONFIG_CHIP_FACTORY_DATA` Kconfig option set to ``y`` using the following command:
-
-   .. code-block:: console
-
-      west build -p -b nrf54h20dk/nrf54h20/cpuapp -- -DCONFIG_CHIP_FACTORY_DATA=y
-
-#. Flash the firmware into the device:
-
-   .. code-block:: console
-
-      west flash --erase
-
-The ``west flash --erase`` command does not clear the factory data partition.
-If you want to clear it, use the following command, and fill the ``<address>`` argument as an address of the factory data partition.
-By default, the address is set to ``0xe174000``.
-
-.. code-block:: console
-
-   nrfutil device erase --pages <address>
-
-Migrating the DAC private key from the factory data set to Trusted Storage is not supported yet on nRF54H20 DK.
-
-.. matter_door_lock_sample_factory_data_nrf54h20_end
 
 User interface
 **************
@@ -482,18 +448,12 @@ Building and running
 
 .. include:: /includes/build_and_run.txt
 
+.. |sample_or_app| replace:: sample
+.. |ipc_radio_dir| replace:: :file:`sysbuild/ipc_radio`
+
+.. include:: /includes/ipc_radio_conf.txt
+
 See `Configuration`_ for information about building the sample with the DFU support.
-
-.. include:: ../template/README.rst
-    :start-after: matter_template_build_wifi_nrf54h20_start
-    :end-before: matter_template_build_wifi_nrf54h20_end
-
-.. code-block:: console
-
-    west build -b nrf54h20dk/nrf54h20/cpuapp -p -- -DSB_CONFIG_WIFI_NRF70=y -DCONFIG_CHIP_WIFI=y -Dlock_SHIELD=nrf7002eb_interposer_p1
-
-.. note::
-   |54H_engb_2_8|
 
 Selecting a configuration
 =========================

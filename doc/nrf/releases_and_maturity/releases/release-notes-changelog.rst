@@ -23,7 +23,7 @@ Known issues
 ************
 
 Known issues are only tracked for the latest official release.
-See `known issues for nRF Connect SDK v2.9.0-nRF54H20-1-rc2`_ for the list of issues valid for the latest release.
+See `known issues for nRF Connect SDK v2.9.0-nRF54H20-1`_ for the list of issues valid for the latest release.
 
 Changelog
 *********
@@ -35,13 +35,19 @@ IDE, OS, and tool support
 
 * Updated:
 
-  * The required `SEGGER J-Link`_ version to v8.10f.
-  * The :ref:`installing_vsc` section on the :ref:`installation` page with the Windows-only requirement to install SEGGER USB Driver for J-Link.
+  * The required `SEGGER J-Link`_ version to v8.18.
+  * The :ref:`installation` page with the following updates:
+
+    * The :ref:`installing_vsc` section with a list valid for both development environments.
+      The list now includes nRF Util as an additional requirement for :ref:`west runner <programming_selecting_runner>` for the |nRFVSC|, and the Windows-only requirement to install SEGGER USB Driver for J-Link for both development environments.
+    * The command-line instructions now use the ``nrfutil sdk-manager`` command instead of the ``nrfutil toolchain-manager`` command.
+      You can read more about the new command in the `nRF Util documentation <sdk-manager command_>`_.
+
 
 Board support
 =============
 
-|no_changes_yet_note|
+* Removed support for the nRF52810 Desktop Mouse board (``nrf52810dmouse/nrf52810``).
 
 Build and configuration system
 ==============================
@@ -49,6 +55,8 @@ Build and configuration system
 * Removed support for the deprecated multi-image builds (parent-child images) functionality.
   All |NCS| projects must now use :ref:`sysbuild`.
   See :ref:`child_parent_to_sysbuild_migration` for an overview of differences with parent-child image and how to migrate.
+* Updated the default runner for the ``west flash`` command to `nRF Util`_ instead of ``nrfjprog`` that is part of the archived `nRF Command Line Tools`_.
+  For more information, see the :ref:`build system section in the v3.0.0 migration guide <migration_3.0_recommended>` and the :ref:`programming_selecting_runner` section on the programming page.
 
 Bootloaders and DFU
 ===================
@@ -110,10 +118,16 @@ Security
 
     * Support for HKDF-Expand and HKDF-Extract in CRACEN.
     * Support for Ed25519ph(HashEdDSA) to CRACEN.
+    * Documentation page about the :ref:`ug_tfm_architecture`.
+    * Documentation page about the :ref:`ug_psa_certified_api_overview`.
 
-  * Updated the :ref:`app_approtect` page with nRF Util commands that replaced the nrfjprog commands.
-    This is part of the ongoing work of archiving `nRF Command Line Tools`_ and replacing them with nRF Util.
-  * Moved the :ref:`app_boards_spe_nspe` documentation page under :ref:`security` from the :ref:`ug_app_dev` section.
+  * Updated:
+
+    * The :ref:`app_approtect` page with nRF Util commands that replaced the nrfjprog commands.
+      This is part of the ongoing work of archiving `nRF Command Line Tools`_ and replacing them with nRF Util.
+    * The Running applications with Trusted Firmware-M page by renaming it to :ref:`ug_tfm` and moving it under :ref:`ug_tfm_index`.
+
+  * Moved the :ref:`app_boards_spe_nspe` documentation page under :ref:`ug_tfm_index` from the :ref:`ug_app_dev` section.
 
 Protocols
 =========
@@ -136,7 +150,9 @@ Bluetooth® LE
 Bluetooth Mesh
 --------------
 
-|no_changes_yet_note|
+* Added:
+
+  * The key importer functionality (:kconfig:option:`CONFIG_BT_MESH_KEY_IMPORTER`).
 
 DECT NR+
 --------
@@ -159,17 +175,21 @@ Matter
 * Added:
 
   * A new documentation page :ref:`ug_matter_group_communication` in the :ref:`ug_matter_intro_overview`.
-  * A new section :ref:`ug_matter_creating_accessory_vendor_cluster` in the :ref:`ug_matter_creating_accessory` page.
+  * A new :ref:`ug_matter_creating_custom_cluster` guide page.
   * A description for the new :ref:`ug_matter_gs_tools_matter_west_commands_append` within the :ref:`ug_matter_gs_tools_matter_west_commands` page.
   * New arguments to the :ref:`ug_matter_gs_tools_matter_west_commands_zap_tool_gui` to provide a custom cache directory and add new clusters to Matter Data Model.
   * :ref:`ug_matter_debug_snippet`.
+  * Storing Matter key materials in the :ref:`matter_platforms_security_kmu`.
 
 * Disabled the :ref:`mpsl` before performing factory reset to speed up the process.
 
 Matter fork
 +++++++++++
 
-|no_changes_yet_note|
+* Added:
+
+  * A new ``kFactoryReset`` event that is posted during factory reset.
+    The application can register a handler and perform additional cleanup.
 
 nRF IEEE 802.15.4 radio driver
 ------------------------------
@@ -189,7 +209,7 @@ Zigbee
 Wi-Fi
 -----
 
-|no_changes_yet_note|
+* The :ref:`ug_wifi_regulatory_certification` documentation is now moved under :ref:`ug_wifi` protocol page.
 
 Applications
 ============
@@ -215,12 +235,12 @@ IPC radio firmware
 ------------------
 
 * Updated the application to enable the :ref:`Zephyr Memory Storage (ZMS) <zephyr:zms_api>` file system in all devices that contain MRAM, such as the nRF54H Series devices.
+* Updated documentation of applications and samples that use the IPC radio firmware as :ref:`companion component <companion_components>` to mention its usage when built with :ref:`configuration_system_overview_sysbuild`.
 
 Matter Bridge
 -------------
 
-* Enabled SUIT DFU support for the :ref:`matter_bridge_app` application.
-  Currently, only the Matter OTA protocol is fully supported for SUIT DFU purposes.
+* Removed support for the nRF54H20 devices.
 * Enabled Link Time Optimization (LTO) by default for the ``release`` configuration.
 
 nRF5340 Audio
@@ -241,7 +261,7 @@ nRF Desktop
   * Application configurations for nRF54L05, nRF54L10, and nRF54L15 SoCs to use Fast Pair PSA cryptography (:kconfig:option:`CONFIG_BT_FAST_PAIR_CRYPTO_PSA`).
     Using PSA cryptography improves security and reduces memory footprint.
     Also increased the size of the Bluetooth receiving thread stack (:kconfig:option:`CONFIG_BT_RX_STACK_SIZE`) to prevent stack overflows.
-  * Application configurations for nRF52810 and nRF52820 SoCs to reduce memory footprint:
+  * Application configurations for the nRF52820 SoC to reduce memory footprint:
 
     * Disabled Bluetooth long workqueue (:kconfig:option:`CONFIG_BT_LONG_WQ`).
     * Limited the number of key slots in the PSA Crypto core to 10 (:kconfig:option:`CONFIG_MBEDTLS_PSA_KEY_SLOT_COUNT`).
@@ -259,17 +279,36 @@ nRF Desktop
     Supporting Bluetooth LE legacy pairing makes devices vulnerable for a downgrade attack.
     The :kconfig:option:`CONFIG_BT_SMP_SC_PAIR_ONLY` Kconfig option is enabled by default in Zephyr.
     If you still need to support the Bluetooth LE legacy pairing, you need to disable the option in the configuration.
+  * :ref:`nrf_desktop_hid_state` and :ref:`nrf_desktop_fn_keys` to use :c:func:`bsearch` implementation from C library.
+    This simplifies maintenance and allows you to use Picolibc (:kconfig:option:`CONFIG_PICOLIBC`).
+  * The IPC radio image configurations of the nRF5340 DK to use Picolibc (:kconfig:option:`CONFIG_PICOLIBC`).
+    This aligns the configurations to the IPC radio image configurations of the nRF54H20 DK.
+    Picolibc is used by default in Zephyr.
+  * The nRF Desktop application image configurations to use Picolibc (:kconfig:option:`CONFIG_PICOLIBC`) by default.
+    Using the minimal libc implementation (:kconfig:option:`CONFIG_MINIMAL_LIBC`) no longer decreases the memory footprint of the application image for most of the configurations.
+  * Enabled :ref:`nrf_desktop_usb_state_sof_synchronization` (:ref:`CONFIG_DESKTOP_USB_HID_REPORT_SENT_ON_SOF <config_desktop_app_options>` Kconfig option) by default on the nRF54H Series SoC (:kconfig:option:`CONFIG_SOC_SERIES_NRF54HX`).
+    The negative impact of USB polling jitter is more visible in case of USB High-Speed.
+  * The Fast Pair sysbuild configurations to align the application with the sysbuild Kconfig changes for controlling the Fast Pair provisioning process.
+    The Nordic device models intended for demonstration purposes are now supplied by default in the nRF Desktop Fast Pair configurations.
 
 * Added:
 
   * System Power Management for the :ref:`zephyr:nrf54h20dk_nrf54h20` board target on the application and radio cores.
-    The application still has high power consumption as the Bluetooth LE controller running on the radio core requires disabling MRAM latency (:kconfig:option:`CONFIG_MRAM_LATENCY_AUTO_REQ`).
-    Enabling MRAM latency makes the Bluetooth LE controller unstable.
   * Application configurations for the nRF54L05 and nRF54L10 SoCs (emulated on the nRF54L15 DK).
     The configurations are supported through ``nrf54l15dk/nrf54l10/cpuapp`` and ``nrf54l15dk/nrf54l05/cpuapp`` board targets.
     For details, see the :ref:`nrf_desktop_board_configuration`.
   * The ``dongle_small`` configuration for the nRF52833 DK.
     The configuration enables logs and mimics the dongle configuration used for small SoCs.
+  * Requirement for zero latency in Zephyr's :ref:`zephyr:pm-system` while USB is active (:ref:`CONFIG_DESKTOP_USB_PM_REQ_NO_PM_LATENCY <config_desktop_app_options>` Kconfig option of the :ref:`nrf_desktop_usb_state_pm`).
+    The feature is enabled by default if Zephyr Power Management (:kconfig:option:`CONFIG_PM`) is enabled to prevent entering power states that introduce wakeup latency and ensure high performance.
+
+* Removed:
+
+  * An imply from the nRF Desktop Bluetooth connectivity Kconfig option (:ref:`CONFIG_DESKTOP_BT <config_desktop_app_options>`).
+    The imply enabled a separate workqueue for connection TX notify processing (:kconfig:option:`CONFIG_BT_CONN_TX_NOTIFY_WQ`) if MPSL was used for synchronization between the flash memory driver and the radio (:kconfig:option:`CONFIG_SOC_FLASH_NRF_RADIO_SYNC_MPSL`).
+    The workaround for the MPSL flash synchronization issue (``NCSDK-29354`` in the :ref:`known_issues` page) is no longer needed, as the issue is now fixed.
+  * Application configurations for the nRF52810 Desktop Mouse board (``nrf52810dmouse/nrf52810``).
+    The board is no longer supported in the |NCS|.
 
 nRF Machine Learning (Edge Impulse)
 -----------------------------------
@@ -281,7 +320,20 @@ Serial LTE modem
 
 * Added an overlay :file:`overlay-memfault.conf` file to enable Memfault.
   For more information about Memfault features in |NCS|, see :ref:`mod_memfault`.
-* Updated the application to use the :ref:`lib_downloader` library instead of the deprecated :ref:`lib_download_client` library.
+
+* Updated:
+
+  * The application to use the :ref:`lib_downloader` library instead of the deprecated :ref:`lib_download_client` library.
+  * In Zephyr, the numerical values of various |NCS| specific socket options that are used with the ``#XSOCKETOPT`` command:
+
+      * The :c:macro:`TLS_DTLS_HANDSHAKE_TIMEO` has been changed from ``18`` to ``1018``
+      * The :c:macro:`SO_SILENCE_ALL` has been changed from ``30`` to ``1030``
+      * The :c:macro:`SO_IP_ECHO_REPLY` has been changed from ``31`` to ``1031``
+      * The :c:macro:`SO_IPV6_ECHO_REPLY` has been changed from ``32`` to ``1032``
+      * The :c:macro:`SO_BINDTOPDN` has been changed from ``40`` to ``1040``
+      * The :c:macro:`SO_TCP_SRV_SESSTIMEO` has been changed from ``55`` to ``1055``
+      * The :c:macro:`SO_RAI` has been changed from ``61`` to ``1061``
+      * The :c:macro:`SO_IPV6_DELAYED_ADDR_REFRESH` has been changed from ``62`` to ``1062``
 
 Thingy:53: Matter weather station
 ---------------------------------
@@ -325,6 +377,12 @@ Bluetooth samples
 
       This change results from the Bluetooth subsystem transition to the PSA cryptographic API.
 
+    * The following samples to use LE Secure Connection pairing (:kconfig:option:`CONFIG_BT_SMP_SC_PAIR_ONLY`).
+
+      * :ref:`peripheral_gatt_dm`
+      * :ref:`peripheral_mds`
+      * :ref:`peripheral_cts_client`
+
 * :ref:`direct_test_mode` sample:
 
   * Added loading of radio trims and a fix of a hardware errata for the nRF54H20 SoC to improve the RF performance.
@@ -332,6 +390,21 @@ Bluetooth samples
 * :ref:`central_uart` sample:
 
   * Added reconnection to bonded devices based on their address.
+
+* :ref:`bluetooth_central_hr_coded` sample:
+
+  * Added the Advertising Coding Selection feature to the sample.
+
+* :ref:`peripheral_hr_coded` sample:
+
+  * Added the Advertising Coding Selection feature to the sample.
+
+Bluetooth Mesh samples
+----------------------
+
+* :ref:`bluetooth_mesh_light_lc` sample:
+
+  * Disabled the Friend feature when the sample is compiled for the :ref:`zephyr:nrf52dk_nrf52832` board target to increase the amount of RAM available for the application.
 
 Bluetooth Fast Pair samples
 ---------------------------
@@ -349,6 +422,7 @@ Bluetooth Fast Pair samples
     * The Bluetooth receiving thread stack (:kconfig:option:`CONFIG_BT_RX_STACK_SIZE`).
 
     This change results from the Bluetooth subsystem transition to the PSA cryptographic API.
+  * The sysbuild configurations in samples to align them with the sysbuild Kconfig changes for controlling the Fast Pair provisioning process.
 
 * Removed using a separate workqueue for connection TX notify processing (:kconfig:option:`CONFIG_BT_CONN_TX_NOTIFY_WQ`) from configurations.
   The MPSL flash synchronization issue (``NCSDK-29354`` in the :ref:`known_issues`) is fixed.
@@ -443,7 +517,9 @@ Cellular samples
 Cryptography samples
 --------------------
 
-|no_changes_yet_note|
+* :ref:`crypto_tls` sample:
+
+  * Added support for the TLS v1.3.
 
 Debug samples
 -------------
@@ -478,10 +554,21 @@ Keys samples
 Matter samples
 --------------
 
-* Updated the :ref:`matter_template_sample` sample document with the instructions on how to build the sample on the nRF54L15 DK with support for Matter OTA DFU and DFU over Bluetooth SMP, and using internal MRAM only.
-* Enabled SUIT DFU support for the :ref:`matter_lock_sample`, and :ref:`matter_template_sample` samples.
-  Currently, only the Matter OTA protocol is fully supported for SUIT DFU purposes.
-* Enabled Link Time Optimization (LTO) by default for the ``release`` configuration and ``nrf7002dk/nrf5340/cpuapp`` build target.
+* Added :ref:`matter_manufacturer_specific_sample` sample that demonstrates an implementation of custom manufacturer-specific clusters used by the application layer.
+
+* :ref:`matter_template_sample` sample:
+
+  * Updated:
+
+    * The documentation with instructions on how to build the sample on the nRF54L15 DK with support for Matter OTA DFU and DFU over Bluetooth SMP, and using internal RRAM only.
+    * Link Time Optimization (LTO) to be enabled by default for the ``release`` configuration and ``nrf7002dk/nrf5340/cpuapp`` build target.
+
+  * Removed support for nRF54H20 devices.
+
+* :ref:`matter_lock_sample` sample:
+
+  * Removed support for nRF54H20 devices.
+  * Updated the API of ``AppTask``, ``BoltLockManager``, and ``AccessManager`` to provide additional information for the ``LockOperation`` event.
 
 Networking samples
 ------------------
@@ -516,6 +603,11 @@ Peripheral samples
 
 PMIC samples
 ------------
+
+* Added the :ref:`npm2100_one_button` sample that demonstrates how to support wake-up, shutdown,
+  and user interactions through a single button connected to the nPM2100 PMIC.
+
+* Added the :ref:`npm2100_fuel_gauge` sample that demonstrates how to calculate the battery state of charge of primary cell batteries using the :ref:`nrfxlib:nrf_fuel_gauge`.
 
 * :ref:`npm1300_fuel_gauge` sample:
 
@@ -554,10 +646,16 @@ Trusted Firmware-M (TF-M) samples
     * PSA certificate reference (optional), configured using the :kconfig:option:`SB_CONFIG_TFM_OTP_PSA_CERTIFICATE_REFERENCE` sysbuild Kconfig option
     * Verification service URL (optional), configured using the :kconfig:option:`CONFIG_TFM_ATTEST_VERIFICATION_SERVICE_URL` Kconfig option
 
+* :ref:`tfm_secure_peripheral_partition` sample:
+
+  * Updated documentation with information about how to access other TF-M partitions from the secure partition.
+
 Thread samples
 --------------
 
-|no_changes_yet_note|
+* :ref:`ot_cli_sample` sample:
+
+  * Removed support for the nRF54H20 DK.
 
 Zigbee samples
 --------------
@@ -593,7 +691,20 @@ Other samples
   * Added:
 
     * Support for the nRF54L05 and nRF54L10 SoCs (emulated on nRF54L15 DK).
-    * FLPR core support for the :ref:`zephyr:nrf54l15dk_nrf54l15` board target.
+    * FLPR core support for the :ref:`zephyr:nrf54l15dk_nrf54l15` and :ref:`zephyr:nrf54h20dk_nrf54h20` board targets.
+
+  * Removed the following compiler options that were set in the :kconfig:option:`CONFIG_COMPILER_OPT` Kconfig option:
+
+    * ``-fno-pie``
+    * ``-fno-pic``
+    * ``-ffunction-sections``
+    * ``-fdata-sections``
+
+    These options are enabled by default in Zephyr and do not need to be set with the dedicated Kconfig option.
+
+* :ref:`caf_sensor_manager_sample` sample:
+
+  * Added low power configuration for the :ref:`zephyr:nrf54h20dk_nrf54h20` board target.
 
 Drivers
 =======
@@ -631,8 +742,19 @@ Bluetooth libraries and services
     * A new information callback - :c:member:`bt_fast_pair_fmdn_info_cb.conn_authenticated` - to the FMDN extension API.
       In the FMDN context, this change is required to support firmware update intents on the Android platform.
       For further details on the Android intent feature for firmware updates, see the :ref:`ug_bt_fast_pair_provisioning_register_firmware_update_intent` section in the Fast Pair integration guide.
+    * A workaround for the issue where the FMDN clock value might not be correctly set after the system reboot for nRF54L Series devices.
+      For details, see the ``NCSDK-32268`` issue in the :ref:`known_issues` page.
 
-  * Updated the automatically generated ``bt_fast_pair`` partition definition (located in the :file:`subsys/partition_manager/pm.yml.bt_fast_pair`) to work correctly when building with TF-M.
+  * Updated:
+
+    * The Fast Pair sysbuild Kconfig options.
+      The ``SB_CONFIG_BT_FAST_PAIR`` Kconfig option is replaced with the ``SB_CONFIG_BT_FAST_PAIR_MODEL_ID`` and ``SB_CONFIG_BT_FAST_PAIR_ANTI_SPOOFING_PRIVATE_KEY``.
+    * The method of supplying the Fast Pair Model ID and Anti-Spoofing Private Key to generate the Fast Pair provisioning data HEX file.
+      The ``FP_MODEL_ID`` and ``FP_ANTI_SPOOFING_KEY`` CMake variables are replaced by the corresponding ``SB_CONFIG_BT_FAST_PAIR_MODEL_ID`` and ``SB_CONFIG_BT_FAST_PAIR_ANTI_SPOOFING_PRIVATE_KEY`` Kconfig options.
+    * The automatically generated ``bt_fast_pair`` partition definition (in the :file:`subsys/partition_manager/pm.yml.bt_fast_pair` file) to work correctly when building with TF-M.
+
+  * Removed the sysbuild control over the :kconfig:option:`CONFIG_BT_FAST_PAIR` Kconfig option that is defined in the main (default) image.
+    Sysbuild no longer sets the value of this Kconfig option.
 
 * :ref:`bt_mesh` library:
 
@@ -646,7 +768,11 @@ Bluetooth libraries and services
 Common Application Framework
 ----------------------------
 
-|no_changes_yet_note|
+* :ref:`caf_buttons`:
+
+  * Added possibility of using more GPIOs.
+    Earlier, only **GPIO0** and **GPIO1** devices were supported.
+    Now, the generic solution supports all GPIOs available in the DTS.
 
 Debug libraries
 ---------------
@@ -727,7 +853,15 @@ Modem libraries
 Multiprotocol Service Layer libraries
 -------------------------------------
 
-|no_changes_yet_note|
+* Added:
+
+  * Integration with the nrf2 clock control driver for the nRF54H20 SoC.
+  * Integration with Zephyr's System Power Management for the nRF54H20 SoC.
+  * Global domain HSFLL120 320MHz frequency request if MPSL is enabled.
+    The high frequency in global domain is required to ensure that fetching instructions from L2-cache and MRAM is as fast as possible.
+    It is needed for the radio protocols to operate correctly.
+  * MRAM always-on request for scheduled radio events.
+    It is needed to avoid MRAM wake-up latency for radio protocols.
 
 Libraries for networking
 ------------------------
@@ -780,6 +914,10 @@ Other libraries
 
 * Removed the following unused SDFW services: ``echo_service``, ``reset_evt_service``, and ``sdfw_update_service``.
 
+* :ref:`mod_dm` library:
+
+  * Updated the default timeslot duration to avoid an overstay assert when the ranging failed.
+
 Security libraries
 ------------------
 
@@ -805,7 +943,12 @@ Scripts
 
 This section provides detailed lists of changes by :ref:`script <scripts>`.
 
-|no_changes_yet_note|
+* :ref:`nrf_desktop_config_channel_script`:
+
+  * Removed HID device type mapping for Development Kits.
+    A Development Kit may use various HID roles (depending on configuration).
+    Assigning a fixed type per board may be misleading.
+    HID device type is still defined for boards that are always configured as the same HID device type.
 
 Integrations
 ============
@@ -820,6 +963,11 @@ Google Fast Pair integration
   * Instructions on how to provision the Fast Pair data onto devices without the :ref:`partition_manager` support, specifically for the :ref:`zephyr:nrf54h20dk_nrf54h20`.
   * Information on how to support the firmware update intent feature on the Android platform.
     Expanded the documentation for the Fast Pair devices with the FMDN extension, which requires additional steps to support this feature.
+
+* Updated:
+
+  * The :ref:`ug_bt_fast_pair_provisioning_register_hex_generation` section that describes how to generate the hex file with the Fast Pair provisioning data.
+  * The :ref:`ug_bt_fast_pair_prerequisite_ops_kconfig` section to align it with recent changes in the sysbuild configuration for Fast Pair.
 
 Edge Impulse integration
 ------------------------
@@ -929,6 +1077,17 @@ Documentation
   * The :ref:`create_application` page with the :ref:`creating_add_on_index` section.
   * The :ref:`ug_nrf91` documentation to use `nRF Util`_ instead of nrfjprog.
   * The :ref:`dm-revisions` section of the :ref:`dm_code_base` page with information about the preview release tag, which replaces the development tag.
+  * The :ref:`ug_bt_mesh_configuring` page with the security toolbox section and the key importer functionality.
 
-* Removed the standalone page for getting started with Nordic Thingy:53.
-  The contents of this page have been moved to the :ref:`thingy53_precompiled` page and to the `Programmer app <Programming Nordic Thingy:53_>`_ documentation.
+* Removed:
+
+  * The entire Zigbee protocol, application and samples documentation.
+    It is now available as separate `Zigbee R22`_ and `Zigbee R23`_ add-on repositories.
+  * The standalone page for getting started with Nordic Thingy:53.
+    The contents of this page have been moved to the :ref:`thingy53_precompiled` page and to the `Programmer app <Programming Nordic Thingy:53_>`_ documentation.
+  * The standalone page for getting started with Nordic Thingy:91.
+    The contents of this page are covered by the `Cellular IoT Fundamentals course`_ in the `Nordic Developer Academy`_.
+    The part about connecting the prototyping platform to nRF Cloud is now a standalone :ref:`thingy91_connect_to_cloud` page in the :ref:`thingy91_ug_intro` section.
+  * The standalone page for getting started with the nRF9160 DK.
+    This page has been replaced by the `Quick Start app`_ that supports the nRF9160 DK.
+    The part about connecting the DK to nRF Cloud is now a standalone :ref:`nrf9160_gs_connecting_dk_to_cloud` page in the :ref:`ug_nrf9160` section.

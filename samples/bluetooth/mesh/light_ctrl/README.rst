@@ -167,7 +167,15 @@ Configuration
 
 |config|
 
-|nrf5340_mesh_sample_note|
+.. tabs::
+
+   .. group-tab:: nRF52 DK (nRF52832)
+
+      Due to limited RAM on the nRF52832 device, the Friend feature is disabled for this DK.
+
+   .. group-tab:: nRF53 DKs
+
+      |nrf5340_mesh_sample_note|
 
 The Kconfig option :kconfig:option:`CONFIG_BT_MESH_LIGHT_CTRL_REG_SPEC` is set by default as it is necessary for the :ref:`bt_mesh_light_ctrl_srv_readme` model according to the `Bluetooth Mesh model specification`_.
 The option enables a separate module called illuminance regulator.
@@ -203,6 +211,11 @@ Building and running
 .. |sample path| replace:: :file:`samples/bluetooth/mesh/light_ctrl`
 
 .. include:: /includes/build_and_run_ns.txt
+
+.. |sample_or_app| replace:: sample
+.. |ipc_radio_dir| replace:: :file:`sysbuild/ipc_radio`
+
+.. include:: /includes/ipc_radio_conf.txt
 
 .. _bluetooth_mesh_light_ctrl_testing:
 

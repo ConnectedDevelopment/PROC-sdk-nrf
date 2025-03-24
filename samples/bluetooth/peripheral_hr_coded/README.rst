@@ -26,6 +26,8 @@ Overview
 The sample demonstrates a basic Bluetooth® Low Energy Peripheral role functionality that exposes the Heart Rate GATT Service with LE Coded PHY support, which is not available in Zephyr Bluetooth LE Controller (See :ref:`ug_ble_controller` for more information).
 Once it connects to a Central device, it generates dummy heart rate values.
 You can use it together with the :ref:`bluetooth_central_hr_coded` sample.
+The sample enables the :kconfig:option:`CONFIG_BT_EXT_ADV_CODING_SELECTION` Kconfig option to use the Advertising Coding Selection feature to explicitly set the required coding scheme for LE Coded PHY.
+The advertiser is configured to use the S=8 coding scheme, but you can change or remove it through the advertising options, depending on the application's needs.
 
 User interface
 **************
@@ -56,6 +58,11 @@ Building and running
 
 .. include:: /includes/build_and_run.txt
 
+.. |sample_or_app| replace:: sample
+.. |ipc_radio_dir| replace:: :file:`sysbuild/ipc_radio`
+
+.. include:: /includes/ipc_radio_conf.txt
+
 .. note::
    |54H_engb_2_8|
 
@@ -70,7 +77,7 @@ After programming the sample to your development kit, you can test it by connect
 #. Wait until the Coded advertiser is detected by the Central.
    In the terminal window, check for information similar to the following::
 
-      Connected: xx.xx.xx.xx.xx.xx (random), tx_phy 4, rx_phy 4
+      Connected: xx.xx.xx.xx.xx.xx (random), tx_phy LE Coded, rx_phy LE Coded
 
 #. In the terminal window, observe that notifications are enabled::
 

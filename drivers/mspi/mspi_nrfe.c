@@ -9,6 +9,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/mspi.h>
 #include <zephyr/drivers/pinctrl.h>
+#include <zephyr/drivers/counter.h>
 #include <zephyr/ipc/ipc_service.h>
 #include <zephyr/pm/device.h>
 #if !defined(CONFIG_MULTITHREADING)
@@ -20,11 +21,13 @@ LOG_MODULE_REGISTER(mspi_nrfe, CONFIG_MSPI_LOG_LEVEL);
 #include <hal/nrf_gpio.h>
 #include <drivers/mspi/nrfe_mspi.h>
 
-#define MSPI_NRFE_NODE	   DT_DRV_INST(0)
-#define MAX_TX_MSG_SIZE	   (DT_REG_SIZE(DT_NODELABEL(sram_tx)))
-#define MAX_RX_MSG_SIZE	   (DT_REG_SIZE(DT_NODELABEL(sram_rx)))
-#define IPC_TIMEOUT_MS	   100
-#define EP_SEND_TIMEOUT_MS 10
+#define MSPI_NRFE_NODE		     DT_DRV_INST(0)
+#define MAX_TX_MSG_SIZE		     (DT_REG_SIZE(DT_NODELABEL(sram_tx)))
+#define MAX_RX_MSG_SIZE		     (DT_REG_SIZE(DT_NODELABEL(sram_rx)))
+#define IPC_TIMEOUT_MS		     100
+#define EP_SEND_TIMEOUT_MS	     10
+#define EXTREME_DRIVE_FREQ_THRESHOLD 32000000
+#define CNT0_TOP_CALCULATE(freq)     (NRFX_CEIL_DIV(SystemCoreClock, freq * 2) - 1)
 
 #define SDP_MPSI_PINCTRL_DEV_CONFIG_INIT(node_id)                                                  \
 	{                                                                                          \
@@ -44,6 +47,8 @@ SDP_MSPI_PINCTRL_DT_DEFINE(MSPI_NRFE_NODE);
 static struct ipc_ept ep;
 static size_t ipc_received;
 static uint8_t *ipc_receive_buffer;
+static volatile uint32_t *cpuflpr_error_ctx_ptr =
+	(uint32_t *)DT_REG_ADDR(DT_NODELABEL(cpuflpr_error_code));
 
 #if defined(CONFIG_MULTITHREADING)
 static K_SEM_DEFINE(ipc_sem, 0, 1);
@@ -113,6 +118,16 @@ static void ep_recv(const void *data, size_t len, void *priv)
 	nrfe_mspi_flpr_response_msg_t *response = (nrfe_mspi_flpr_response_msg_t *)data;
 
 	switch (response->opcode) {
+#if defined(CONFIG_MSPI_NRFE_FAULT_TIMER)
+	case NRFE_MSPI_CONFIG_TIMER_PTR: {
+#if defined(CONFIG_MULTITHREADING)
+		k_sem_give(&ipc_sem);
+#else
+		atomic_set_bit(&ipc_atomic_sem, NRFE_MSPI_CONFIG_TIMER_PTR);
+#endif
+		break;
+	}
+#endif
 	case NRFE_MSPI_CONFIG_PINS: {
 #if defined(CONFIG_MULTITHREADING)
 		k_sem_give(&ipc_sem_cfg);
@@ -157,6 +172,21 @@ static void ep_recv(const void *data, size_t len, void *priv)
 #endif
 		break;
 	}
+	case NRFE_MSPI_SDP_APP_HARD_FAULT: {
+
+		volatile uint32_t cause = cpuflpr_error_ctx_ptr[0];
+		volatile uint32_t pc = cpuflpr_error_ctx_ptr[1];
+		volatile uint32_t bad_addr = cpuflpr_error_ctx_ptr[2];
+		volatile uint32_t *ctx = (volatile uint32_t *)cpuflpr_error_ctx_ptr[3];
+
+		LOG_ERR(">>> SDP APP FATAL ERROR");
+		LOG_ERR("Faulting instruction address (mepc): 0x%08x", pc);
+		LOG_ERR("mcause: 0x%08x, mtval: 0x%08x, ra: 0x%08x", cause, bad_addr, ctx[0]);
+		LOG_ERR("    t0: 0x%08x,    t1: 0x%08x, t2: 0x%08x", ctx[1], ctx[2], ctx[3]);
+
+		LOG_ERR("SDP application halted...");
+		break;
+	}
 	default: {
 		LOG_ERR("Invalid response opcode: %d", response->opcode);
 		break;
@@ -164,45 +194,6 @@ static void ep_recv(const void *data, size_t len, void *priv)
 	}
 
 	LOG_HEXDUMP_DBG((uint8_t *)data, len, "Received msg:");
-}
-
-/**
- * @brief Send data to the flpr with the given opcode.
- *
- * @param opcode The opcode of the message to send.
- * @param data The data to send.
- * @param len The length of the data to send.
- *
- * @return 0 on success, -ENOMEM if there is no space in the buffer,
- *         -ETIMEDOUT if the transfer timed out.
- */
-static int mspi_ipc_data_send(nrfe_mspi_opcode_t opcode, const void *data, size_t len)
-{
-	int rc;
-
-	LOG_DBG("Sending msg with opcode: %d", (uint8_t)opcode);
-#if defined(CONFIG_SYS_CLOCK_EXISTS)
-	uint32_t start = k_uptime_get_32();
-#else
-	uint32_t repeat = EP_SEND_TIMEOUT_MS;
-#endif
-#if !defined(CONFIG_MULTITHREADING)
-	atomic_clear_bit(&ipc_atomic_sem, opcode);
-#endif
-
-	do {
-		rc = ipc_service_send(&ep, data, len);
-#if defined(CONFIG_SYS_CLOCK_EXISTS)
-		if ((k_uptime_get_32() - start) > EP_SEND_TIMEOUT_MS) {
-#else
-		repeat--;
-		if ((rc < 0) && (repeat == 0)) {
-#endif
-			break;
-		};
-	} while (rc == -ENOMEM); /* No space in the buffer. Retry. */
-
-	return rc;
 }
 
 /**
@@ -219,6 +210,9 @@ static int nrfe_mspi_wait_for_response(nrfe_mspi_opcode_t opcode, uint32_t timeo
 	int ret = 0;
 
 	switch (opcode) {
+	case NRFE_MSPI_CONFIG_TIMER_PTR:
+		ret = k_sem_take(&ipc_sem, K_MSEC(timeout));
+		break;
 	case NRFE_MSPI_CONFIG_PINS:
 	case NRFE_MSPI_CONFIG_DEV:
 	case NRFE_MSPI_CONFIG_XFER: {
@@ -270,16 +264,38 @@ static int nrfe_mspi_wait_for_response(nrfe_mspi_opcode_t opcode, uint32_t timeo
  */
 static int send_data(nrfe_mspi_opcode_t opcode, const void *data, size_t len)
 {
-	int rc;
+	LOG_DBG("Sending msg with opcode: %d", (uint8_t)opcode);
 
+	int rc;
 #ifdef CONFIG_MSPI_NRFE_IPC_NO_COPY
 	(void)len;
 	void *data_ptr = (void *)data;
-
-	rc = mspi_ipc_data_send(opcode, &data_ptr, sizeof(void *));
-#else
-	rc = mspi_ipc_data_send(opcode, data, len);
 #endif
+
+#if defined(CONFIG_SYS_CLOCK_EXISTS)
+	uint32_t start = k_uptime_get_32();
+#else
+	uint32_t repeat = EP_SEND_TIMEOUT_MS;
+#endif
+#if !defined(CONFIG_MULTITHREADING)
+	atomic_clear_bit(&ipc_atomic_sem, opcode);
+#endif
+
+	do {
+#ifdef CONFIG_MSPI_NRFE_IPC_NO_COPY
+		rc = ipc_service_send(&ep, &data_ptr, sizeof(void *));
+#else
+		rc = ipc_service_send(&ep, data, len);
+#endif
+#if defined(CONFIG_SYS_CLOCK_EXISTS)
+		if ((k_uptime_get_32() - start) > EP_SEND_TIMEOUT_MS) {
+#else
+		repeat--;
+		if ((rc < 0) && (repeat == 0)) {
+#endif
+			break;
+		};
+	} while (rc == -ENOMEM); /* No space in the buffer. Retry. */
 
 	if (rc < 0) {
 		LOG_ERR("Data transfer failed: %d", rc);
@@ -388,6 +404,10 @@ static int api_dev_config(const struct device *dev, const struct mspi_dev_id *de
 	int rc;
 	nrfe_mspi_dev_config_msg_t mspi_dev_config_msg;
 
+	if (param_mask == MSPI_DEVICE_CONFIG_NONE) {
+		return 0;
+	}
+
 	if (param_mask & MSPI_DEVICE_CONFIG_MEM_BOUND) {
 		if (cfg->mem_boundary) {
 			LOG_ERR("Memory boundary is not supported.");
@@ -403,9 +423,32 @@ static int api_dev_config(const struct device *dev, const struct mspi_dev_id *de
 	}
 
 	if (param_mask & MSPI_DEVICE_CONFIG_FREQUENCY) {
+
+		uint8_t state_id;
+
+		for (state_id = 0; state_id < drv_cfg->pcfg->state_cnt; state_id++) {
+			if (drv_cfg->pcfg->states[state_id].id == PINCTRL_STATE_DEFAULT) {
+				break;
+			}
+		}
+
+		if ((cfg->freq >= EXTREME_DRIVE_FREQ_THRESHOLD) &&
+		    (NRF_GET_DRIVE(drv_cfg->pcfg->states[state_id].pins[0]) != NRF_DRIVE_E0E1)) {
+			LOG_ERR("Invalid pin drive for this frequency: %u, expected: %u",
+				NRF_GET_DRIVE(drv_cfg->pcfg->states[state_id].pins[0]),
+				NRF_DRIVE_E0E1);
+			return -EINVAL;
+		}
+
 		if (cfg->freq > drv_cfg->mspicfg.max_freq) {
 			LOG_ERR("Invalid frequency: %u, MAX: %u", cfg->freq,
 				drv_cfg->mspicfg.max_freq);
+			return -EINVAL;
+		}
+
+		if (CNT0_TOP_CALCULATE(cfg->freq) > UINT16_MAX) {
+			LOG_ERR("Invalid frequency: %u. MIN: %u", cfg->freq,
+				NRFX_CEIL_DIV(drv_cfg->mspicfg.max_freq, UINT16_MAX));
 			return -EINVAL;
 		}
 	}
@@ -436,7 +479,7 @@ static int api_dev_config(const struct device *dev, const struct mspi_dev_id *de
 	mspi_dev_config_msg.dev_config.io_mode = cfg->io_mode;
 	mspi_dev_config_msg.dev_config.cpp = cfg->cpp;
 	mspi_dev_config_msg.dev_config.ce_polarity = cfg->ce_polarity;
-	mspi_dev_config_msg.dev_config.freq = cfg->freq;
+	mspi_dev_config_msg.dev_config.cnt0_value = CNT0_TOP_CALCULATE(cfg->freq);
 	mspi_dev_config_msg.dev_config.ce_index = cfg->ce_num;
 
 	return send_data(NRFE_MSPI_CONFIG_DEV, (void *)&mspi_dev_config_msg,
@@ -460,13 +503,13 @@ static int api_get_channel_status(const struct device *dev, uint8_t ch)
  * @retval -ENOMEM if there is no space in the buffer
  * @retval -ETIMEDOUT if the transfer timed out
  */
-static int xfer_packet(struct mspi_xfer_packet *packet, uint32_t timeout)
+static int send_packet(struct mspi_xfer_packet *packet, uint32_t timeout)
 {
 	int rc;
 	nrfe_mspi_opcode_t opcode = (packet->dir == MSPI_RX) ? NRFE_MSPI_TXRX : NRFE_MSPI_TX;
 
 #ifdef CONFIG_MSPI_NRFE_IPC_NO_COPY
-	/* Check for alignment problems. */
+	/* In case of buffer alignment problems: create correctly aligned temporary buffer. */
 	uint32_t len = ((uint32_t)packet->data_buf) % sizeof(uint32_t) != 0
 			       ? sizeof(nrfe_mspi_xfer_packet_msg_t) + packet->num_bytes
 			       : sizeof(nrfe_mspi_xfer_packet_msg_t);
@@ -482,10 +525,14 @@ static int xfer_packet(struct mspi_xfer_packet *packet, uint32_t timeout)
 	xfer_packet->num_bytes = packet->num_bytes;
 
 #ifdef CONFIG_MSPI_NRFE_IPC_NO_COPY
-	/* Check for alignlemt problems. */
+	/* In case of buffer alignment problems: fill temporary buffer with TX data and
+	 * set it as packet data.
+	 */
 	if (((uint32_t)packet->data_buf) % sizeof(uint32_t) != 0) {
-		memcpy((void *)(buffer + sizeof(nrfe_mspi_xfer_packet_msg_t)),
-		       (void *)packet->data_buf, packet->num_bytes);
+		if (packet->dir == MSPI_TX) {
+			memcpy((void *)(buffer + sizeof(nrfe_mspi_xfer_packet_msg_t)),
+			       (void *)packet->data_buf, packet->num_bytes);
+		}
 		xfer_packet->data = buffer + sizeof(nrfe_mspi_xfer_packet_msg_t);
 	} else {
 		xfer_packet->data = packet->data_buf;
@@ -497,20 +544,39 @@ static int xfer_packet(struct mspi_xfer_packet *packet, uint32_t timeout)
 	rc = send_data(xfer_packet->opcode, xfer_packet, len);
 
 	/* Wait for the transfer to complete and receive data. */
-	if ((packet->dir == MSPI_RX) && (ipc_receive_buffer != NULL) && (ipc_received > 0)) {
-		/*
-		 * It is not possible to check whether received data is valid, so packet->num_bytes
-		 * should always be equal to ipc_received. If it is not, then something went wrong.
-		 */
-		if (packet->num_bytes != ipc_received) {
-			rc = -EIO;
-		} else {
-			memcpy((void *)packet->data_buf, (void *)ipc_receive_buffer, ipc_received);
-		}
+	if (packet->dir == MSPI_RX) {
 
-		/* Clear the receive buffer pointer and size */
-		ipc_receive_buffer = NULL;
-		ipc_received = 0;
+		/* In case of CONFIG_MSPI_NRFE_IPC_NO_COPY ipc_received if equal to 0 because
+		 * packet buffer address was passed to vpr and data was written directly there.
+		 * So there is no way of checking how much data was written.
+		 */
+#ifdef CONFIG_MSPI_NRFE_IPC_NO_COPY
+		/* In case of buffer alignment problems: copy received data from temporary buffer
+		 * back to users buffer.
+		 */
+		if (((uint32_t)packet->data_buf) % sizeof(uint32_t) != 0) {
+			memcpy((void *)packet->data_buf, (void *)xfer_packet->data,
+			       packet->num_bytes);
+		}
+#else
+		if ((ipc_receive_buffer != NULL) && (ipc_received > 0)) {
+			/*
+			 * It is not possible to check whether received data is valid, so
+			 * packet->num_bytes should always be equal to ipc_received. If it is not,
+			 * then something went wrong.
+			 */
+			if (packet->num_bytes != ipc_received) {
+				rc = -EIO;
+			} else {
+				memcpy((void *)packet->data_buf, (void *)ipc_receive_buffer,
+				       ipc_received);
+			}
+
+			/* Clear the receive buffer pointer and size */
+			ipc_receive_buffer = NULL;
+			ipc_received = 0;
+		}
+#endif
 	}
 
 	return rc;
@@ -538,7 +604,7 @@ static int start_next_packet(struct mspi_xfer *xfer, uint32_t packets_done)
 		return -EINVAL;
 	}
 
-	return xfer_packet(packet, xfer->timeout);
+	return send_packet(packet, xfer->timeout);
 }
 
 /**
@@ -633,6 +699,16 @@ static int dev_pm_action_cb(const struct device *dev, enum pm_device_action acti
 }
 #endif
 
+#if defined(CONFIG_MSPI_NRFE_FAULT_TIMER)
+static void flpr_fault_handler(const struct device *dev, void *user_data)
+{
+	ARG_UNUSED(dev);
+	ARG_UNUSED(user_data);
+
+	LOG_ERR("SDP fault detected.");
+}
+#endif
+
 /**
  * @brief Initialize the MSPI NRFE driver.
  *
@@ -654,6 +730,16 @@ static int nrfe_mspi_init(const struct device *dev)
 		.bus = dev,
 		.config = drv_cfg->mspicfg,
 	};
+
+#if defined(CONFIG_MSPI_NRFE_FAULT_TIMER)
+	const struct device *const flpr_fault_timer = DEVICE_DT_GET(DT_NODELABEL(fault_timer));
+	const struct counter_top_cfg top_cfg = {
+		.callback = flpr_fault_handler,
+		.user_data = NULL,
+		.flags = 0,
+		.ticks = counter_us_to_ticks(flpr_fault_timer, CONFIG_MSPI_NRFE_FAULT_TIMEOUT)
+	};
+#endif
 
 	ret = pinctrl_apply_state(drv_cfg->pcfg, PINCTRL_STATE_DEFAULT);
 	if (ret) {
@@ -691,6 +777,40 @@ static int nrfe_mspi_init(const struct device *dev)
 		return ret;
 	}
 #endif
+
+#if defined(CONFIG_MSPI_NRFE_FAULT_TIMER)
+	/* Configure timer as SDP `watchdog` */
+	if (!device_is_ready(flpr_fault_timer)) {
+		LOG_ERR("FLPR timer not ready");
+		return -1;
+	}
+
+	ret = counter_set_top_value(flpr_fault_timer, &top_cfg);
+	if (ret < 0) {
+		LOG_ERR("counter_set_top_value() failure");
+		return ret;
+	}
+
+	/* Send timer address to FLPR */
+	nrfe_mspi_flpr_timer_msg_t timer_data = {
+		.opcode = NRFE_MSPI_CONFIG_TIMER_PTR,
+		.timer_ptr = (NRF_TIMER_Type *)DT_REG_ADDR(DT_NODELABEL(fault_timer)),
+	};
+
+	ret = send_data(NRFE_MSPI_CONFIG_TIMER_PTR, (const void *)&timer_data.opcode,
+			sizeof(nrfe_mspi_flpr_timer_msg_t));
+	if (ret < 0) {
+		LOG_ERR("Send timer configuration failure");
+		return ret;
+	}
+
+	ret = counter_start(flpr_fault_timer);
+	if (ret < 0) {
+		LOG_ERR("counter_start() failure");
+		return ret;
+	}
+#endif
+
 	return ret;
 }
 

@@ -48,6 +48,7 @@
 .. _`Zephyr pull request #50305`: https://github.com/zephyrproject-rtos/zephyr/pull/50305
 .. _`Zephyr issue #69546`: https://github.com/zephyrproject-rtos/zephyr/issues/69546
 
+.. _`generate_psa_key_attributes.py`: https://github.com/nrfconnect/sdk-nrf/blob/main/scripts/generate_psa_key_attributes.py
 .. _`print_toolchain_checksum.sh`: https://github.com/nrfconnect/sdk-nrf/blob/main/scripts/print_toolchain_checksum.sh
 .. _`JLink License Agreement`: https://github.com/nrfconnect/sdk-nrf/blob/main/scripts/docker/jlink/license.txt
 
@@ -67,8 +68,11 @@
 .. _`manifest group filter`: https://github.com/nrfconnect/sdk-nrf/blob/20f40501f69bc9bfd2b321704917da1769411936/west.yml#L42
 .. _`Zephyr commit 8dc3f8`: https://github.com/nrfconnect/sdk-zephyr/commit/8dc3f856229ce083c956aa301c31a23e65bd8cd8
 .. _`hwmv2 conversion script`: https://github.com/nrfconnect/sdk-zephyr/blob/main/scripts/utils/board_v1_to_v2.py
-.. _`ncs-example-application commit f9f2da`: https://github.com/nrfconnect/ncs-example-application/commit/f9f2da24041a7b1923e49893cca912482c138aae
 .. _`sdk-zephyr west build patch`: https://github.com/nrfconnect/sdk-zephyr/blob/1a5d3b4a4ff98a33222856526afdf9c089b96d2b/scripts/west_commands/build.py#L585-L598
+.. _`nRF52840 DK board.cmake`: https://github.com/nrfconnect/sdk-zephyr/blob/main/boards/nordic/nrf52840dk/board.cmake
+
+.. _`ncs-example-application commit f9f2da`: https://github.com/nrfconnect/ncs-example-application/commit/f9f2da24041a7b1923e49893cca912482c138aae
+
 .. _`sdk-nrf PR #15892`: https://github.com/nrfconnect/sdk-nrf/pull/15892
 .. _`sdk-nrf PR #14474`: https://github.com/nrfconnect/sdk-nrf/pull/14474
 .. _`sdk-nrf PR #16242`: https://github.com/nrfconnect/sdk-nrf/pull/16242
@@ -162,9 +166,7 @@
 
 .. _`bt_nus_service.cpp`: https://github.com/nrfconnect/sdk-nrf/blob/main/samples/matter/common/src/bt_nus/bt_nus_service.cpp
 .. _`bt_nus_service.h`: https://github.com/nrfconnect/sdk-nrf/blob/main/samples/matter/common/src/bt_nus/bt_nus_service.h
-
 .. _`DCL Quick Start Guide`: https://github.com/zigbee-alliance/distributed-compliance-ledger/blob/master/docs/quickStartGuide.adoc
-
 .. _`nRF Cloud JSON protocol schemas`: https://github.com/nRFCloud/application-protocols
 .. _`device_credentials_installer.py`: https://github.com/nRFCloud/utils/blob/master/python/modem-firmware-1.3%2B/device_credentials_installer.py
 .. _`nrf_cloud_onboard.py`: https://github.com/nRFCloud/utils/blob/master/python/modem-firmware-1.3%2B/README.md#nrf-cloud-device-onboarding
@@ -197,6 +199,8 @@
 
 .. _`commit #d55314`: https://github.com/nrfconnect/sdk-nrf/commit/d553142f4f37bc324da9869e4837cdd9105e25ab
 
+.. _`Zigbee R22`: https://github.com/nrfconnect/ncs-zigbee-r22
+.. _`Zigbee R23`: https://github.com/nrfconnect/ncs-zigbee
 .. _`zcbor 0.8.0 release notes`: https://github.com/zephyrproject-rtos/zcbor/blob/0.8.0/RELEASE_NOTES.md
 .. _`zcbor 0.8.1 release notes`: https://github.com/zephyrproject-rtos/zcbor/blob/0.8.1/RELEASE_NOTES.md
 
@@ -210,6 +214,8 @@
 
 .. _`Zephyr hostap fork`: https://github.com/zephyrproject-rtos/hostap
 
+.. _`tfm_secure_peripheral_partition.yaml`: https://github.com/nrfconnect/sdk-nrf/blob/main/samples/tfm/tfm_secure_peripheral/secure_peripheral_partition/tfm_secure_peripheral_partition.yaml
+
 .. ### Source: github.io
 
 .. _`TinyCBOR`: https://intel.github.io/tinycbor/current/
@@ -218,18 +224,37 @@
 
 .. _`Azure SDK for Embedded C`: https://azure.github.io/azure-sdk-for-c/
 
-.. _`PSA Certified Crypto API`: https://arm-software.github.io/psa-api/crypto/
-.. _`PSA Cryptography API 1.0.1`: https://armmbed.github.io/mbed-crypto/1.0.1/html/index.html
-.. _`PSA Certified Crypto API 1.2.1`: https://arm-software.github.io/psa-api/crypto/1.2/
-.. _`PSA Certified Crypto API 1.2 PAKE Extension Final 1`: https://arm-software.github.io/psa-api/crypto/1.2/ext-pake/
-.. _`PSA functions for key management`: https://arm-software.github.io/psa-api/crypto/1.1/api/keys/management.html
-.. _`PSA Certified Secure Storage API 1.0`: https://arm-software.github.io/psa-api/storage/1.0/
-.. _`PSA Certified Attestation API 1.0`: https://arm-software.github.io/psa-api/attestation/1.0/
 
 .. _`Memfault WebBluetooth Client`: https://memfault.github.io/web-ble-example/
 
 .. _`nRF Connect SDK Add-ons`: https://nrfconnect.github.io/ncs-app-index/
 .. _`ncs-app-index`: https://github.com/nrfconnect/ncs-app-index
+
+.. _`crypto.h`: https://github.com/nrfconnect/sdk-trusted-firmware-m/blob/master/interface/include/psa/crypto.h
+.. _`protected_storage.h`: https://github.com/nrfconnect/sdk-trusted-firmware-m/blob/master/interface/include/psa/protected_storage.h
+.. _`initial_attestation.h`: https://github.com/nrfconnect/sdk-trusted-firmware-m/blob/main/interface/include/psa/initial_attestation.h.in
+
+.. ### Source: arm-software.github.io, armmbed.github.io
+
+.. _`PSA Certified APIs`: https://arm-software.github.io/psa-api/
+
+.. _`PSA Certified Crypto API`: https://arm-software.github.io/psa-api/crypto/
+.. _`psa_generate_random()`: https://arm-software.github.io/psa-api/crypto/1.1/api/ops/rng.html
+.. _`Key Identifiers`: https://arm-software.github.io/psa-api/crypto/1.1/api/keys/ids.html#key-identifiers
+.. _`Keystore Interface`: https://arm-software.github.io/psa-api/crypto/1.1/overview/goals.html#a-keystore-interface
+.. _`PSA Cryptography API 1.0.1`: https://armmbed.github.io/mbed-crypto/1.0.1/html/index.html
+.. _`PSA Certified Crypto API 1.2.1`: https://arm-software.github.io/psa-api/crypto/1.2/
+.. _`PSA Certified Crypto API 1.2 PAKE Extension Final 1`: https://arm-software.github.io/psa-api/crypto/1.2/ext-pake/
+.. _`PSA functions for key management`: https://arm-software.github.io/psa-api/crypto/1.1/api/keys/management.html
+
+.. _`PSA Certified Secure Storage API`: https://arm-software.github.io/psa-api/storage/
+.. _`PSA Certified Secure Storage API 1.0`: https://arm-software.github.io/psa-api/storage/1.0/
+
+.. _`PSA Certified Attestation API`: https://arm-software.github.io/psa-api/attestation/
+.. _`PSA Certified Attestation API 1.0`: https://arm-software.github.io/psa-api/attestation/1.0/
+
+.. _`PSA Certified Firmware Update API`: https://arm-software.github.io/psa-api/fwu/
+
 
 .. ### Source: githubusercontent.com
 
@@ -238,50 +263,7 @@
 
 .. ### Source: developer.nordicsemi.com
 
-.. _`API documentation`:
-.. _`external ZBOSS development guide and API documentation`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/zigbee_devguide.html
-.. _`Stack commissioning start sequence`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#stack_start_initiation
-.. _`ZBOSS NCP Host`: https://ncsdoc.z6.web.core.windows.net/ncp_sdk_for_host/ncp_host_v2.2.5.zip
-.. _`NCP Host documentation`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/zboss_ncp_host_intro.html
-.. _`Rebuilding the ZBOSS libraries for host`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/zboss_ncp_host.html#rebuilding_libs
-.. _`process the frame`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#process_zcl_cmd
 .. _`declaring custom cluster`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#cluster_declaration_custom
-.. _`Configuring sleepy behavior for end devices`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/zigbee_prog_principles.html#zigbee_power_optimization_sleepy
-.. _`zboss_signal_handler()`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#gae05c0ff285cfd03e0997fe438e8047fc
-.. _`Common ZCL terms and definitions`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#ZCL_definitions
-.. _`Declaring attributes`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#att_declaration
-.. _`Declaring endpoint`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#endpoint_dec
-.. _`Declaring simple descriptors`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#simple_desc_declaration
-.. _`Declaring Zigbee device context`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#zigbee_device_context_dec
-.. _`Declaring Zigbee device context with multiple endpoints`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#zigbee_device_context_mult_ep_dec
-.. _`Resetting to factory defaults`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#reset_factory_defaults
-.. _`Registering device context`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#register_zigbee_device
-.. _`Support for Zigbee commissioning`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/using_zigbee__z_c_l.html#zcl_zigbee_commissioning
-.. _`BDB Commissioning API`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zboss__bdb__api.html
-
-.. _`ZB_BDB_SIGNAL_FINDING_AND_BINDING_INITIATOR_FINISHED`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#ga18f5e7ddfefb7d01ef98f696a9694d79
-.. _`ZB_ZDO_SIGNAL_PRODUCTION_CONFIG_READY`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#ga3eb4631c12c345991be2461566c150e9
-.. _`ZB_ZDO_SIGNAL_SKIP_STARTUP`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#gab2b9e7a13fd471d7bb642655d825a04e
-.. _`ZB_BDB_SIGNAL_DEVICE_FIRST_START`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#gab55565980ef0580712f8dc160b01ea06
-.. _`ZB_BDB_SIGNAL_DEVICE_REBOOT`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#ga3e9d86f42d2c6c27240f423a40fb152b
-.. _`ZB_BDB_SIGNAL_FORMATION`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#ga342d4176c8932ff8ab0d8d6f997fa603
-.. _`ZB_BDB_SIGNAL_STEERING`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#ga25a801841c95d6daddb9c60b39542b13
-.. _`ZB_ZDO_SIGNAL_LEAVE`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__comm__signals.html#ga7942f336484c4fbb85626951480b2bba
-.. _`ZB_HA_DECLARE_ON_OFF_SWITCH_CLUSTER_LIST`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__ha__on__off__switch.html#ga566dbde2d408c46c488460219edf6002
-.. _`ZB_AF_REGISTER_DEVICE_CTX`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__af__management__service.html#ga2ba409e0ae3e25032b673a5f85859a45
-.. _`ZB_HA_DECLARE_TEMPERATURE_SENSOR_CLUSTER_LIST`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__ha__temperature__sensor.html#ga1baeb195bbce720ee97cf9c879726cbb
-.. _`zb_zcl_device_callback_param_t`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group___z_b___z_c_l___i_n_i_t_i_a_l_i_z_a_t_i_o_n.html#ga0dfcc989252b93252f8bb1d27d2639fa
-.. _`zb_zcl_device_callback_id_t`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group___z_b___z_c_l___i_n_i_t_i_a_l_i_z_a_t_i_o_n.html#gad27454b213ce8a00540ebc75288966ad
-.. _`ZB_ZCL_OTA_UPGRADE_VALUE_CB_ID`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group___z_b___z_c_l___i_n_i_t_i_a_l_i_z_a_t_i_o_n.html#gga35caa2e3a9ef37535b1f75e0fe919266a8a87688c465e80b46ad821741a60fe84
-.. _`zb_bdb_set_legacy_device_support`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zboss__bdb__comm__params.html#ga8bf3b3beef192c00bcdca17ad1240921
-.. _`zboss_start()`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zb__general__start.html#ga31b4d46033aaf6a400409d03bd40d392
-.. _`bdb_start_top_level_commissioning()`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zboss__bdb__comm__start.html#ga0b54e93a19cadc5fc02df8eab18ecd45
-.. _`zb_bdb_commissioning_mode_mask_e`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zboss__bdb__comm__start.html#ga9c44bbce9f6f6b19b623837914959c02
-.. _`ZB_BDB_NETWORK_STEERING`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zboss__bdb__comm__start.html#gga9c44bbce9f6f6b19b623837914959c02ae31d4a2067eb711a43f7049b08710299
-.. _`ZB_BDB_NETWORK_FORMATION`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zboss__bdb__comm__start.html#gga9c44bbce9f6f6b19b623837914959c02ac723cfd38f78c08a673ec3664539027c
-.. _`ZB_BDB_FINDING_N_BINDING`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zboss__bdb__comm__start.html#gga9c44bbce9f6f6b19b623837914959c02ad9bcb56a6668b6ba6f37edc73a796b58
-.. _`zb_bdb_finding_binding_initiator()`: https://ncsdoc.z6.web.core.windows.net/zboss/3.11.6.0/group__zboss__bdb__comm__fb.html#gae6fd60a050559ef0aa3c3e5ec32bc515
-
 
 .. ### Source: www.nordicsemi.com
 
@@ -348,6 +330,7 @@
 .. _`Thingy:91 product page`: https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-91
 .. _`Thingy:91 Downloads`:
 .. _`Thingy:91 product website (downloads)`: https://www.nordicsemi.com/Software-and-tools/Prototyping-platforms/Nordic-Thingy-91/Download#infotabs
+.. _`Nordic Thingy:91 get started`: https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-91/GetStarted?lang=en#infotabs
 .. _`Thingy:91 X product page`: https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-91-X
 
 .. _`nRF21540 DK product page`: https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF21540
@@ -356,6 +339,8 @@
 .. _`nPM1300 product website`: https://www.nordicsemi.com/products/npm1300
 .. _`nPM1300 EK product page`: https://www.nordicsemi.com/Products/Development-hardware/nPM1300-EK
 .. _`nPM1300 EK get started`: https://www.nordicsemi.com/Products/Development-hardware/nPM1300-EK/Get-started?lang=en#infotabs
+
+.. _`nPM2100 product website`: https://www.nordicsemi.com/Products/nPM2100
 
 .. _`nRF Desktop reference design page`: https://www.nordicsemi.com/Products/Reference-designs/nRF-Desktop
 
@@ -370,6 +355,8 @@
 .. _`Nordic third-party modules`: https://www.nordicsemi.com/Nordic-Partners/3rd-party-modules
 
 .. _`contact our sales`: https://www.nordicsemi.com/About-us/Contact-Us#Sales_related_questions
+
+.. _`PSA Certified Nordic Products`: https://www.nordicsemi.com/Products/Technologies/Security/Certifications?lang=en#infotabs
 
 .. #### Source: www.nordicsemi.com/Events/
 
@@ -436,10 +423,12 @@
 .. _`nRF Connect SDK latest documentation`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/index.html
 
 .. _`known issues page on the main branch`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html
-.. _`known issues for nRF Connect SDK v2.9.0-nRF54H20-1-rc2`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-9-0-nRF54H20-1-rc2
+.. _`known issues for nRF Connect SDK v2.9.1`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-9-1
+.. _`known issues for nRF Connect SDK v2.9.0-nRF54H20-1`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-9-0-nRF54H20-1
 .. _`known issues for nRF Connect SDK v2.9.0`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-9-0
 .. _`known issues for nRF Connect SDK v2.8.0`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-8-0
 .. _`known issues for nRF Connect SDK v2.7.0`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-7-0
+.. _`known issues for nRF Connect SDK v2.6.4`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-6-4
 .. _`known issues for nRF Connect SDK v2.6.3`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-6-3
 .. _`known issues for nRF Connect SDK v2.6.2`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-6-2
 .. _`known issues for nRF Connect SDK v2.6.1`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/known_issues.html?v=v2-6-1
@@ -487,17 +476,22 @@
 .. _`TF-M Crypto`: https://docs.nordicsemi.com/bundle/ncs-latest/page/tfm/integration_guide/services/tfm_crypto_integration_guide.html
 .. _`TF-M PS`: https://docs.nordicsemi.com/bundle/ncs-latest/page/tfm/integration_guide/services/tfm_ps_integration_guide.html
 .. _`TF-M Attestation`: https://docs.nordicsemi.com/bundle/ncs-latest/page/tfm/integration_guide/services/tfm_attestation_integration_guide.html
+.. _`TF-M Secure Interrupt Integration`: https://docs.nordicsemi.com/bundle/ncs-latest/page/tfm/integration_guide/tfm_secure_irq_integration_guide.html
+.. _`TF-M Secure Partition Manager`: https://docs.nordicsemi.com/bundle/ncs-latest/page/tfm/design_docs/services/secure_partition_manager.html
+.. _`TF-M Inter-Process Communication`: https://docs.nordicsemi.com/bundle/ncs-latest/page/tfm/design_docs/services/tfm_psa_inter_process_communication.html
 
 .. _`HCI Events`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrfxlib/softdevice_controller/doc/api.html#hci_events
 
 .. _`nRF socket options`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrfxlib/nrf_modem/doc/sockets.html
 
-.. _`Repositories and revisions for v2.9.0-nRF54H20-1-rc2`: https://docs.nordicsemi.com/bundle/ncs-2.9.0-nRF54H20-1-rc2/page/nrf/releases_and_maturity/repository_revisions.html
+.. _`Repositories and revisions for v2.9.1`: https://docs.nordicsemi.com/bundle/ncs-2.9.1/page/nrf/releases_and_maturity/repository_revisions.html
+.. _`Repositories and revisions for v2.9.0-nRF54H20-1`: https://docs.nordicsemi.com/bundle/ncs-2.9.0-nRF54H20-1/page/nrf/releases_and_maturity/repository_revisions.html
 .. _`Repositories and revisions for v2.9.0`: https://docs.nordicsemi.com/bundle/ncs-2.9.0/page/nrf/releases_and_maturity/repository_revisions.html
 .. _`Repositories and revisions for v2.8.0`: https://docs.nordicsemi.com/bundle/ncs-2.8.0/page/nrf/releases_and_maturity/repository_revisions.html
 .. _`Repositories and revisions for v2.7.99-cs2`: https://docs.nordicsemi.com/bundle/ncs-2.7.99-cs2/page/nrf/releases_and_maturity/repository_revisions.html
 .. _`Repositories and revisions for v2.7.99-cs1`: https://docs.nordicsemi.com/bundle/ncs-2.7.99-cs1/page/nrf/releases_and_maturity/repository_revisions.html
 .. _`Repositories and revisions for v2.7.0`: https://docs.nordicsemi.com/bundle/ncs-2.7.0/page/nrf/releases_and_maturity/repository_revisions.html
+.. _`Repositories and revisions for v2.6.4`: https://docs.nordicsemi.com/bundle/ncs-2.6.4/page/nrf/releases_and_maturity/repository_revisions.html
 .. _`Repositories and revisions for v2.6.3`: https://docs.nordicsemi.com/bundle/ncs-2.6.3/page/nrf/releases_and_maturity/repository_revisions.html
 .. _`Repositories and revisions for v2.6.2`: https://docs.nordicsemi.com/bundle/ncs-2.6.2/page/nrf/releases_and_maturity/repository_revisions.html
 .. _`Repositories and revisions for v2.6.99-cs1`: https://docs.nordicsemi.com/bundle/ncs-2.6.99-cs1/page/nrf/releases_and_maturity/repository_revisions.html
@@ -526,9 +520,11 @@
 .. _`Repositories and revisions for v1.9.1`: https://docs.nordicsemi.com/bundle/ncs-1.9.1/page/nrf/introduction.html#repositories_and_revisions
 .. _`Repositories and revisions`: https://docs.nordicsemi.com/bundle/ncs-1.9.0/page/nrf/introduction.html#repositories_and_revisions
 
+.. _`Modem library changelog for v2.9.1`: https://docs.nordicsemi.com/bundle/ncs-2.9.1/page/nrfxlib/nrf_modem/doc/CHANGELOG.html#nrf-modem-changelog
 .. _`Modem library changelog for v2.9.0`: https://docs.nordicsemi.com/bundle/ncs-2.9.0/page/nrfxlib/nrf_modem/doc/CHANGELOG.html#nrf-modem-changelog
 .. _`Modem library changelog for v2.8.0`: https://docs.nordicsemi.com/bundle/ncs-2.8.0/page/nrfxlib/nrf_modem/doc/CHANGELOG.html#nrf-modem-changelog
 .. _`Modem library changelog for v2.7.0`: https://docs.nordicsemi.com/bundle/ncs-2.7.0/page/nrfxlib/nrf_modem/doc/CHANGELOG.html#nrf-modem-changelog
+.. _`Modem library changelog for v2.6.4`: https://docs.nordicsemi.com/bundle/ncs-2.6.4/page/nrfxlib/nrf_modem/doc/CHANGELOG.html#nrf-modem-changelog
 .. _`Modem library changelog for v2.6.3`: https://docs.nordicsemi.com/bundle/ncs-2.6.3/page/nrfxlib/nrf_modem/doc/CHANGELOG.html#nrf-modem-changelog
 .. _`Modem library changelog for v2.6.2`: https://docs.nordicsemi.com/bundle/ncs-2.6.2/page/nrfxlib/nrf_modem/doc/CHANGELOG.html#nrf-modem-changelog
 .. _`Modem library changelog for v2.6.1`: https://docs.nordicsemi.com/bundle/ncs-2.6.1/page/nrfxlib/nrf_modem/doc/CHANGELOG.html#nrf-modem-changelog
@@ -556,9 +552,11 @@
 .. _`Modem library changelog for v1.9.1`: https://docs.nordicsemi.com/bundle/ncs-1.9.1/page/nrfxlib/nrf_modem/doc/CHANGELOG.html
 .. _`Modem library changelog for v1.9.0`: https://docs.nordicsemi.com/bundle/ncs-1.9.0/page/nrfxlib/nrf_modem/doc/CHANGELOG.html
 
+.. _`LwM2M carrier library changelog for v2.9.1`: https://docs.nordicsemi.com/bundle/ncs-2.9.1/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html#liblwm2m-carrier-changelog
 .. _`LwM2M carrier library changelog for v2.9.0`: https://docs.nordicsemi.com/bundle/ncs-2.9.0/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html#liblwm2m-carrier-changelog
 .. _`LwM2M carrier library changelog for v2.8.0`: https://docs.nordicsemi.com/bundle/ncs-2.8.0/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html#liblwm2m-carrier-changelog
 .. _`LwM2M carrier library changelog for v2.7.0`: https://docs.nordicsemi.com/bundle/ncs-2.7.0/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html#liblwm2m-carrier-changelog
+.. _`LwM2M carrier library changelog for v2.6.4`: https://docs.nordicsemi.com/bundle/ncs-2.6.4/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html#liblwm2m-carrier-changelog
 .. _`LwM2M carrier library changelog for v2.6.3`: https://docs.nordicsemi.com/bundle/ncs-2.6.3/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html#liblwm2m-carrier-changelog
 .. _`LwM2M carrier library changelog for v2.6.2`: https://docs.nordicsemi.com/bundle/ncs-2.6.2/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html#liblwm2m-carrier-changelog
 .. _`LwM2M carrier library changelog for v2.6.1`: https://docs.nordicsemi.com/bundle/ncs-2.6.1/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html#liblwm2m-carrier-changelog
@@ -587,7 +585,7 @@
 .. _`LwM2M carrier library changelog for v1.9.0`: https://docs.nordicsemi.com/bundle/ncs-1.9.0/page/nrf/libraries/bin/lwm2m_carrier/CHANGELOG.html
 
 .. _`Migration guide for nRF Connect SDK v3.0.0`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_guide_3.0.html
-.. _`Migration guide for nRF Connect SDK v2.9.0-nRF54H20-1-rc2`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_guide_2.9.0-nRF54H20-1-rc2.html
+.. _`Migration guide for nRF Connect SDK v2.9.0-nRF54H20-1`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_guide_2.9.0-nRF54H20-1.html
 .. _`Migration guide for nRF Connect SDK v2.9.0`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_guide_2.9.html
 .. _`Migration guide for nRF Connect SDK v2.8.0`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_guide_2.8.html
 .. _`Migration guide for nRF Connect SDK v2.7.0`: https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_guide_2.7.html
@@ -631,6 +629,7 @@
 .. _`Matter factory data Kconfig options`: https://docs.nordicsemi.com/bundle/ncs-latest/page/kconfig/index.html#!CHIP_FACTORY_DATA
 
 .. _`Kconfig search results`: https://docs.nordicsemi.com/bundle/ncs-latest/page/kconfig/index.html#!CONFIG_PM_PARTITION_SIZE
+.. _`CONFIG_SSF_PSA_CRYPTO_SERVICE_ENABLED`: https://docs.nordicsemi.com/bundle/ncs-latest/page/kconfig/index.html#!CONFIG_SSF_PSA_CRYPTO_SERVICE_ENABLED
 
 .. _`nRF Asset Tracker project`: https://docs.nordicsemi.com/bundle/nrf-asset-tracker-saga/page/index.html
 .. _`Getting started guide for nRF Asset Tracker for AWS`: https://docs.nordicsemi.com/bundle/nrf-asset-tracker-saga/page/docs/aws/GettingStarted/Index.html
@@ -660,7 +659,6 @@
 
 .. _`nRF Thread Topology Monitor`: https://docs.nordicsemi.com/bundle/ug_nrf_ttm/page/UG/nrf_ttm/ttm_introduction.html
 .. _`nRF Sniffer for 802.15.4`: https://docs.nordicsemi.com/bundle/ug_sniffer_802154/page/UG/sniffer_802154/intro_802154.html
-.. _`Configuring Wireshark for Zigbee`: https://docs.nordicsemi.com/bundle/ug_sniffer_802154/page/UG/sniffer_802154/configuring_sniffer_802154_zigbee.html
 
 .. _`Power Profiler Kit II (PPK2)`: https://docs.nordicsemi.com/bundle/ug_ppk2/page/UG/ppk/PPK_user_guide_Intro.html
 .. _`Install the Power Profiler app`: https://docs.nordicsemi.com/bundle/ug_ppk2/page/UG/common/nrf_connect_app_installing.html
@@ -679,7 +677,10 @@
 .. _`nRF9160 Product Specification`: https://docs.nordicsemi.com/bundle/ps_nrf9160/page/nRF9160_html5_keyfeatures.html
 .. _`nRF9160 DK GPS`:
 .. _`nRF9160 GPS receiver specification`: https://docs.nordicsemi.com/bundle/ps_nrf9160/page/gps.html
+.. _`nRF9160 System Protection Unit`: https://docs.nordicsemi.com/bundle/ps_nrf9160/page/spu.html
+.. _`nRF9160 flash access control`: https://docs.nordicsemi.com/bundle/ps_nrf9160/page/spu.html#ariaid-title4
 .. _`nRF9160 SiP pin configuration`: https://docs.nordicsemi.com/bundle/ref_at_commands/page/REF/at_commands/sip_pin_configuration/sip_pin_configuration.html
+.. _`nRF9160 CRYPTOCELL - Arm TrustZone CryptoCell 310`: https://docs.nordicsemi.com/bundle/ps_nrf9160/page/cryptocell.html
 
 .. _`nWP044 - Best practices for cellular IoT development LTE technology`: https://docs.nordicsemi.com/bundle/nwp_044/page/WP/nwp_044/lte_technology.html
 .. _`nWP044 - Best practices for cellular IoT development`: https://docs.nordicsemi.com/bundle/nwp_044/page/WP/nwp_044/intro.html
@@ -696,6 +697,7 @@
 .. _`nRF9161 Product Specification`: https://docs.nordicsemi.com/bundle/ps_nrf9161/page/nRF9161_html5_keyfeatures.html
 .. _`nRF9161 GPS receiver specification`: https://docs.nordicsemi.com/bundle/ps_nrf9161/page/gps.html
 .. _`nRF9161 DECT NR+ specification`: https://docs.nordicsemi.com/bundle/ps_nrf9161/page/dect.html
+.. _`nRF9161 System Protection Unit`: https://docs.nordicsemi.com/bundle/ps_nrf9161/page/spu.html
 
 .. _`nRF9161 DK Hardware`: https://docs.nordicsemi.com/bundle/ug_nrf9161_dk/page/UG/nrf91_DK/intro.html
 .. _`nRF9161 DK board control section in the nRF9161 DK User Guide`: https://docs.nordicsemi.com/bundle/ug_nrf9161_dk/page/UG/nrf91_DK/hw_description/nrf9161_board_controller.html
@@ -740,10 +742,15 @@
 
 .. _`nRF54L15 Datasheet`: https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/keyfeatures_html5.html
 .. _`nRF54L15 DK User Guide`: https://docs.nordicsemi.com/bundle/ug_nrf54l15_dk/page/UG/nRF54L15_DK/intro/intro.html
+.. _`nRF54L15 Debugger signals`: https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/tampc.html#ariaid-title6
+.. _`nRF54L15 Security`: https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/chapters/security.html
+.. _`nRF54L15 feature access control`: https://docs.nordicsemi.com/bundle/ps_nrf54L15/page/spu.html#ariaid-title8
 
 .. _`nRF53 Series`: https://docs.nordicsemi.com/category/nrf-53-series
 
 .. _`nRF5340 Product Specification`: https://docs.nordicsemi.com/bundle/ps_nrf5340/page/keyfeatures_html5.html
+.. _`nRF5340 CRYPTOCELL — Arm TrustZone CryptoCell 312`: https://docs.nordicsemi.com/bundle/ps_nrf5340/page/cryptocell.html
+
 .. _`nRF5340 DK User Guide`: https://docs.nordicsemi.com/bundle/ug_nrf5340_dk/page/UG/dk/intro.html
 .. _`Execute in place page in the nRF5340 Product Specification`: https://docs.nordicsemi.com/bundle/ps_nrf5340/page/qspi.html#d1789e363
 .. _`nRF5340 DK Compatibility Matrix`: https://docs.nordicsemi.com/bundle/comp_matrix_nrf5340/page/COMP/nrf5340/nrf5340_comp_matrix.html
@@ -791,11 +798,13 @@
 
 .. _`Measuring current`: https://docs.nordicsemi.com/bundle/ug_nrf7002_dk/page/UG/nrf7002_DK/hw_measure_current.html
 .. _`nRF70 Series`:
+.. _`Guidelines for nRF70 Series devices`:
 .. _`Guidelines and application notes for nRF70 Series devices`: https://docs.nordicsemi.com/category/nrf-70-series
 
 .. _`nRF70 Series power states`: https://docs.nordicsemi.com/bundle/ps_nrf7002/page/chapters/functional/doc/power_states.html
 
 .. _`nRF7002 EK`:
+.. _`nRF7002 EK Hardware`:
 .. _`nRF7002 EK User Guide`: https://docs.nordicsemi.com/bundle/ug_nrf7002_ek/page/UG/nrf7002_EK/intro.html
 .. _`nRF7002 EB User Guide`: https://docs.nordicsemi.com/bundle/ug_nrf7002_eb/page/UG/nrf7002_EB/intro.html
 .. _`nRF7002 EB PCB edge connector`: https://docs.nordicsemi.com/bundle/ug_nrf7002_eb/page/UG/nrf7002_EB/pcb_edge_connector.html
@@ -860,10 +869,12 @@
 .. _`Installing and upgrading nRF Util commands`: https://docs.nordicsemi.com/bundle/nrfutil/page/guides/installing_commands.html
 .. _`Installing specific versions of nRF Util commands`: https://docs.nordicsemi.com/bundle/nrfutil/page/guides/installing_commands.html#installing-specific-versions-of-commands
 .. _`Installing nRF Util for nRF5 SDK`: https://docs.nordicsemi.com/bundle/nrfutil/page/guides-nrf5sdk/installing.html
-.. _`DFU over Zigbee`: https://docs.nordicsemi.com/bundle/nrfutil/page/guides-nrf5sdk/dfu_performing.html#dfu-over-zigbee
 .. _`Generating DFU packages`: https://docs.nordicsemi.com/bundle/nrfutil/page/guides-nrf5sdk/dfu_generating_packages.html
 .. _`DFU over a serial USB connection`: https://docs.nordicsemi.com/bundle/nrfutil/page/guides-nrf5sdk/dfu_performing.html#dfu-over-a-serial-usb-connection
 .. _`Toolchain Manager command`: https://docs.nordicsemi.com/bundle/nrfutil/page/nrfutil-toolchain-manager/nrfutil-toolchain-manager_0.14.1.html
+.. _`sdk-manager command`: https://docs.nordicsemi.com/bundle/nrfutil/page/nrfutil-sdk-manager/nrfutil-sdk-manager.html
+.. _`sdk-manager Configuration settings`: https://docs.nordicsemi.com/bundle/nrfutil/page/nrfutil-sdk-manager/sdk_manager_config_settings.html
+.. _`sdk-manager Starting and inspecting the toolchain environment`: https://docs.nordicsemi.com/bundle/nrfutil/page/nrfutil-sdk-manager/guides/sdk_manager_env_launch.html
 .. _`Recovering the device`: https://docs.nordicsemi.com/bundle/nrfutil/page/nrfutil-device/guides/programming_recovery.html
 .. _`nrfutil-trace`: https://docs.nordicsemi.com/bundle/nrfutil/page/nrfutil-trace/CHANGELOG.html
 .. _`nRF Sniffer for Bluetooth LE`: https://docs.nordicsemi.com/bundle/nrfutil/page/nrfutil-ble-sniffer/guides/overview.html
@@ -877,8 +888,6 @@
 
 .. _`nRF5 SDK Bootloader`: https://infocenter.nordicsemi.com/topic/sdk_nrf5_v17.0.2/lib_bootloader.html
 .. _`nRF5 Bootloader DFU Mode`: https://infocenter.nordicsemi.com/topic/sdk_nrf5_v17.0.2/lib_bootloader.html#lib_bootloader_dfu_mode
-
-.. _`System Protection Unit`: https://docs.nordicsemi.com/bundle/ps_nrf9160/page/spu.html
 
 .. _`nRF9160 Hardware Verification Guidelines - UART interface`: https://docs.nordicsemi.com/bundle/nwp_034/page/WP/nwp_034/uart_if.html
 .. _`nRF9160 Antenna and RF Interface Guidelines`: https://docs.nordicsemi.com/bundle/nwp_033/page/WP/nwp_033/nwp_033_intro.html
@@ -1398,12 +1407,10 @@
 .. _`nRF Cloud Portal Bulk Onboard Devices`: https://nrfcloud.com/#/add-device/bulk
 .. _`nRF Cloud Portal Devices`: https://nrfcloud.com/#/devices
 
-.. ### Source: zigbeealliance.org & csa-iot.org
+.. ### Source: csa-iot.org
 
-.. _`Zigbee Alliance`:
 .. _`Connectivity Standards Alliance`: https://csa-iot.org
 .. _`CSA Specifications Download Request`: https://csa-iot.org/developer-resource/specifications-download-request/
-.. _`Zigbee Cluster Library specification`: https://zigbeealliance.org/wp-content/uploads/2019/12/07-5123-06-zigbee-cluster-library-specification.pdf
 
 .. _`Matter Resource Kit`:
 .. _`CSA Matter Resource Kit`: https://community.csa-iot.org/page/matter-resource-kit
@@ -1504,6 +1511,18 @@
 .. _`IDAU`: https://developer.arm.com/docs/100690/latest/attribution-units-sau-and-idau
 .. _`ARM CoreSight`: https://developer.arm.com/documentation/100536/0302
 .. _`ARM Platform Security Model 1.1`: https://developer.arm.com/documentation/den0128/0101b/
+.. _`Trusted Base System Architecture for M (TBSA-M) Specification`: https://developer.arm.com/-/media/Arm%20Developer%20Community/PDF/PSA/DEN0083_PSA_TBSA-M_1.0-bet2.pdf?revision=5f9de99f-a7b5-4851-b041-f698521bf6bf
+.. _`Platform Security Architectures`: https://www.arm.com/architecture/security-features/platform-security
+
+.. ### Source: psacertified.org
+
+.. _`Platform Security Architecture (PSA)`: https://www.psacertified.org/what-is-psa-certified/
+.. _`PSA Certified IoT Security Framework`: https://www.psacertified.org/what-is-psa-certified/using-psa-certified/
+.. _`What is a Root of Trust?`: https://www.psacertified.org/blog/what-is-a-root-of-trust/
+.. _`Device Attestation and Entity Attestation Tokens Explained`: https://www.psacertified.org/blog/what-is-an-entity-attestation-token/
+.. _`PSA Certified development resources`: https://www.psacertified.org/development-resources/
+.. _`PSA Certified foundational training course`: https://www.psacertified.org/development-resources/psa-certified-foundational-training-course/
+
 
 .. ### Source: etsi.org
 
@@ -1536,9 +1555,7 @@
 
 .. _`Coiote Device Management`: https://www.avsystem.com/products/coiote-iot-device-management-platform/
 .. _`Coiote Device Management server`: https://eu.iot.avsystem.cloud/
-.. _`nRF Cloud integration with Coiote Device Management`: https://iotdevzone.avsystem.com/docs/Cloud_integrations/nRF_Cloud_Location_services/Configure_nRF_Cloud_integration/
 .. _`Viewing device location in Coiote Device Management`: https://iotdevzone.avsystem.com/docs/Cloud_integrations/nRF_Cloud_Location_services/Configure_nRF_Cloud_integration/#view-device-location-in-coiote-dm
-.. _`Setting observations for an object`: https://iotdevzone.avsystem.com/docs/Coiote_IoT_DM/Quick_Start/Visualize_device_data/#set-observation-and-add-widget
 .. _`nRF9160 Anjay integration`: https://iotdevzone.avsystem.com/docs/LwM2M_Client/Nordic/nRF9160DK/
 .. _`Thingy:91 integration`: https://iotdevzone.avsystem.com/docs/LwM2M_Client/Nordic/Thingy91/#thingy91
 
@@ -1553,6 +1570,8 @@
 .. _`nRF Connect for VS Code Extension Pack`: https://marketplace.visualstudio.com/items?itemName=nordic-semiconductor.nrf-connect-extension-pack
 .. _`VSMQTT`: https://marketplace.visualstudio.com/items?itemName=rpdswtk.vsmqtt
 .. _`Visual Studio Code download page`: https://code.visualstudio.com/download
+
+.. _`start VS Code walkthrough`: vscode://nordic-semiconductor.nrf-connect-extension-pack/quickstart
 
 .. ### Source: python.org
 
@@ -1594,8 +1613,8 @@
 
 .. ### Source: files.nordicsemi.com
 
-.. _`Twister test report for nRF Connect SDK v2.9.0-nRF54H20-1-rc2`: https://files.nordicsemi.com/ui/api/v1/download/contentBrowsing/NCS/external/release/v2.9.0-nrf54h20-1-rc2/test-report/twister_test_results_report.html?isNativeBrowsing=true
-.. _`Hardware test report for nRF Connect SDK v2.9.0-nRF54H20-1-rc2`: https://files.nordicsemi.com/ui/api/v1/download/contentBrowsing/NCS/external/release/v2.9.0-nrf54h20-1-rc2/test-report/common_ncs_test_results_report.html?isNativeBrowsing=true
+.. _`Twister test report for nRF Connect SDK v2.9.0-nRF54H20-1`: https://files.nordicsemi.com/ui/api/v1/download/contentBrowsing/NCS/external/release/v2.9.0-nRF54H20-1/test-report/twister_test_results_report.html?isNativeBrowsing=true
+.. _`Hardware test report for nRF Connect SDK v2.9.0-nRF54H20-1`: https://files.nordicsemi.com/ui/api/v1/download/contentBrowsing/NCS/external/release/v2.9.0-nRF54H20-1/test-report/common_ncs_test_results_report.html?isNativeBrowsing=true
 .. _`Twister test report for nRF Connect SDK v2.9.0`: https://files.nordicsemi.com/ui/api/v1/download/contentBrowsing/NCS/external/release/v2.9.0/test-report/twister_test_results_report.html?isNativeBrowsing=true
 .. _`Hardware test report for nRF Connect SDK v2.9.0`: https://files.nordicsemi.com/ui/api/v1/download/contentBrowsing/NCS/external/release/v2.9.0/test-report/common_ncs_test_results_report.html?isNativeBrowsing=true
 .. _`Twister test report for nRF Connect SDK v2.8.0`: https://files.nordicsemi.com/ui/api/v1/download/contentBrowsing/NCS/external/release/v2.8.0/test-report/twister_test_results_report.html?isNativeBrowsing=true
@@ -1642,8 +1661,6 @@
 .. _`T-Mobile's IoT certification program`: https://www.t-mobile.com/business/solutions/iot/device-certification
 
 .. _`LG U+ certification program`: https://iotportal.uplus.co.kr/cnts/web/DEV_PRCS?gIdx=M0003&mIdx=M00031
-
-.. _`Platform Security Architecture (PSA)`: https://www.psacertified.org/what-is-psa-certified/
 
 .. _`Mbed TLS`: https://www.trustedfirmware.org/projects/mbed-tls/
 .. _`Trusted Firmware M`: https://www.trustedfirmware.org/projects/tf-m/
@@ -1792,7 +1809,7 @@
 .. _`nRF54H20 SoC binaries v0.7.0 for EngC DKs`: https://files.nordicsemi.com/artifactory/SDSC/external/nrf54h20_soc_binaries_v0.7.0_engc.zip
 .. _`nRF54H20 SoC binaries v0.7.0 for EngB DKs`: https://files.nordicsemi.com/artifactory/SDSC/external/nrf54h20_soc_binaries_v0.7.0_engb.zip
 .. _`nRF54H20 SoC binaries v0.8.0`: https://files.nordicsemi.com/ui/native/SDSC/external/nrf54h20_soc_binaries_v0.8.0.zip
-.. _`nRF54H20 SoC binaries v0.9.1`: https://files.nordicsemi.com/ui/native/SDSC/external/nrf54h20_soc_binaries_v0.9.1.zip
+.. _`nRF54H20 SoC binaries v0.9.2`: https://files.nordicsemi.com/ui/native/SDSC/external/nrf54h20_soc_binaries_v0.9.2.zip
 
 .. _`BICR binary file`: https://files.nordicsemi.com/artifactory/SDSC/external/bicr_ext_loadcap.hex
 .. _`BICR new binary file`: https://files.nordicsemi.com/artifactory/SDSC/external/bicr/bicr.hex

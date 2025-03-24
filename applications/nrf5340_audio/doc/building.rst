@@ -62,7 +62,7 @@ When preparing the JSON file, update the following fields:
 
 * ``nrf5340_audio_dk_snr`` -- This field lists the SEGGER serial number.
   You can check this ten-digit number on the sticker on the nRF5340 Audio development kit.
-  Alternatively, connect the development kit to your PC and run ``nrfjprog -i`` in a command window to print the SEGGER serial number of all connected kits.
+  Alternatively, connect the development kit to your PC and run ``nrfutil device list`` in a command window to print the SEGGER serial number of all connected kits.
 * ``nrf5340_audio_dk_dev`` -- This field assigns the specific nRF5340 Audio development kit to be ``headset`` or ``gateway``.
 * ``channel`` -- This field is valid only for headsets.
   It sets the channels on which the headset is meant to work.
@@ -98,6 +98,10 @@ The building command for running the script requires providing the following par
      - ``release``, ``debug``
      - | :ref:`nrf53_audio_app_configuration_files`
        | **Note:** For FOTA DFU, you must use :ref:`nrf53_audio_app_building_standard`.
+   * - Transport type (``-t``)
+     - Specifies the transport type.
+     - ``broadcast``, ``unicast``
+     - :ref:`nrf53_audio_app_overview_architecture`
    * - Device type (``-d``)
      - Specifies the device type.
      - ``headset``, ``gateway``, ``both``
@@ -107,7 +111,7 @@ For example, the following command builds headset and gateway applications using
 
 .. code-block:: console
 
-   python buildprog.py -c app -b debug -d both
+   python buildprog.py -c app -b debug -d both -t unicast
 
 The command can be run from any location, as long as the correct path to :file:`buildprog.py` is given.
 
@@ -132,9 +136,9 @@ The command for programming can look as follows:
 
 .. code-block:: console
 
-   python buildprog.py -c both -b debug -d both -p
+   python buildprog.py -c both -b debug -d both -t unicast -p
 
-This command builds the headset and the gateway applications with ``debug`` version of both the application core binary and the network core binary - and programs each to its respective core.
+This command builds the unicast headset and the gateway applications with ``debug`` version of both the application core binary and the network core binary - and programs each to its respective core.
 If you want to rebuild from scratch, you can add the ``--pristine`` parameter to the command (west's ``-p`` for cannot be used for a pristine build with the script).
 
 .. note::
@@ -143,7 +147,7 @@ If you want to rebuild from scratch, you can add the ``--pristine`` parameter to
 
    .. code-block:: console
 
-      python buildprog.py -c both -b debug -d both -p --recover_on_fail
+      python buildprog.py -c both -b debug -d both -t unicast -p --recover_on_fail
 
 Getting help
 ------------
@@ -247,6 +251,8 @@ The application supports the following custom configurations:
      - | Builds the debug version of the application with the features needed to perform DFU over Bluetooth LE, and includes bootloaders so that the applications on both the application core and network core can be updated.
        | See :ref:`nrf53_audio_app_fota` for more information.
 
+.. _nrf53_audio_app_configuration_select_build:
+
 Building the application
 ========================
 
@@ -254,10 +260,12 @@ Complete the following steps to build the application:
 
 1. Choose the combination of build flags:
 
-   a. Choose the device type by using one of the following options:
+   a. Choose the device type by using one of the following :ref:`CMake options for extra Kconfig fragments <cmake_options>`:
 
-      * For headset device: ``-DCONFIG_AUDIO_DEV=1``
-      * For gateway device: ``-DCONFIG_AUDIO_DEV=2``
+      * For unicast headset: ``-DEXTRA_CONF_FILE=".\unicast_server\overlay-unicast_server.conf"``
+      * For unicast gateway: ``-DEXTRA_CONF_FILE=".\unicast_client\overlay-unicast_client.conf"``
+      * For broadcast headset: ``-DEXTRA_CONF_FILE=".\broadcast_sink\overlay-broadcast_sink.conf"``
+      * For broadcast gateway: ``-DEXTRA_CONF_FILE=".\broadcast_source\overlay-broadcast_source.conf"``
 
    #. Choose the application version (:ref:`nrf53_audio_app_building_config_files`) by using one of the following options:
 
@@ -269,7 +277,7 @@ Complete the following steps to build the application:
 
    .. code-block:: console
 
-      west build -b nrf5340_audio_dk/nrf5340/cpuapp --pristine -- -DCONFIG_AUDIO_DEV=1 -DFILE_SUFFIX=release
+      west build -b nrf5340_audio_dk/nrf5340/cpuapp --pristine -- -DEXTRA_CONF_FILE=".\unicast_server\overlay-unicast_server.conf" -DFILE_SUFFIX=release
 
    This command creates the build files for headset device directly in the :file:`build` directory.
    What this means is that you cannot create build files for all devices you want to program, because the subsequent commands will overwrite the files in the :file:`build` directory.
@@ -285,7 +293,7 @@ The following command example builds the application for :ref:`nrf53_audio_app_f
 
 .. code-block:: console
 
-   west build -b nrf5340_audio_dk/nrf5340/cpuapp --pristine -- -DCONFIG_AUDIO_DEV=1 -DFILE_SUFFIX=fota
+   west build -b nrf5340_audio_dk/nrf5340/cpuapp --pristine -- -DEXTRA_CONF_FILE=".\unicast_server\overlay-unicast_server.conf" -DFILE_SUFFIX=fota
 
 The command uses ``-DFILE_SUFFIX=fota`` to pick :file:`prj_fota.conf` instead of the default :file:`prj.conf`.
 It also uses the ``--pristine`` to clean the existing directory before starting the build process.
@@ -298,21 +306,21 @@ After building the files for the development kit you want to program, follow the
 When using the default CIS configuration, if you want to use two headset devices, you must also populate the UICR with the desired channel for each headset.
 Use the following commands, depending on which headset you want to populate:
 
-* Left headset (``--val 0``):
+* Left headset (``--value 0``):
 
    .. code-block:: console
 
-      nrfjprog --memwr 0x00FF80F4 --val 0
+      nrfutil device x-write --address 0x00FF80F4 --value 0
 
-* Right headset (``--val 1``):
+* Right headset (``--value 1``):
 
    .. code-block:: console
 
-      nrfjprog --memwr 0x00FF80F4 --val 1
+      nrfutil device x-write --address 0x00FF80F4 --value 1
 
 Select the correct board when prompted with the popup.
-Alternatively, you can add the ``--snr`` parameter followed by the SEGGER serial number of the correct board at the end of the ``nrfjprog`` command.
-You can check the serial numbers of the connected devices with the ``nrfjprog -i`` command.
+Alternatively, you can add the ``--serial-number`` parameter followed by the SEGGER serial number of the correct board at the end of the ``nrfutil device`` command.
+You can check the serial numbers of the connected devices with the ``nrfutil device list`` command.
 
 .. note::
    |usb_known_issues|

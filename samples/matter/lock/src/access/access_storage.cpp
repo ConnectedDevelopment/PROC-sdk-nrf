@@ -11,11 +11,11 @@
 #include <zephyr/sys/cbprintf.h>
 
 #ifdef CONFIG_LOCK_PRINT_STORAGE_STATUS
-#ifdef CONFIG_NVS
+#ifdef CONFIG_SETTINGS_NVS
 #include <zephyr/fs/nvs.h>
-#elif CONFIG_ZMS
+#elif CONFIG_SETTINGS_ZMS
 #include <zephyr/fs/zms.h>
-#endif /* CONFIG_NVS */
+#endif /* CONFIG_SETTINGS_NVS */
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
 
@@ -31,11 +31,11 @@ bool GetStorageFreeSpace(size_t &freeBytes)
 		LOG_ERR("AccessStorage: Cannot read NVS free space [error: %d]", status);
 		return false;
 	}
-#ifdef CONFIG_NVS
+#ifdef CONFIG_SETTINGS_NVS
 	freeBytes = nvs_calc_free_space(static_cast<nvs_fs *>(storage));
-#elif CONFIG_ZMS
+#elif CONFIG_SETTINGS_ZMS
 	freeBytes = zms_calc_free_space(static_cast<zms_fs *>(storage));
-#endif /* NVS */
+#endif /* CONFIG_SETTINGS_NVS */
 	return true;
 }
 } /* namespace */
@@ -53,16 +53,23 @@ bool GetStorageFreeSpace(size_t &freeBytes)
 #define PSStore SecureStore
 #define PSRemove SecureRemove
 #define PSLoad SecureLoad
+#define PSFactoryReset SecureFactoryReset
 #elif defined(CONFIG_NCS_SAMPLE_MATTER_SETTINGS_STORAGE_BACKEND)
 #define PSInit NonSecureInit
 #define PSStore NonSecureStore
 #define PSLoad NonSecureLoad
 #define PSRemove NonSecureRemove
+#define PSFactoryReset NonSecureFactoryReset
 #endif
 
 bool AccessStorage::Init()
 {
-	return (Nrf::PSErrorCode::Success == Nrf::GetPersistentStorage().PSInit());
+	return Nrf::PSErrorCode::Success == Nrf::GetPersistentStorage().PSInit(&mRootNode);
+}
+
+void AccessStorage::FactoryReset()
+{
+	Nrf::GetPersistentStorage().PSFactoryReset();
 }
 
 bool AccessStorage::PrepareKeyName(Type storageType, uint16_t index, uint16_t subindex)

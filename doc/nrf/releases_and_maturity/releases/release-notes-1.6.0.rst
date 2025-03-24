@@ -324,11 +324,11 @@ Zigbee
 In this release, Zigbee is supported for development and should not be used for production.
 |NCS| v1.5.1 contains the certified Zigbee solution supported for production.
 
-* Added version 0.9.5 of the `ZBOSS NCP Host`_ package that includes a simple gateway application.
+* Added version 0.9.5 of the ZBOSS NCP Host package that includes a simple gateway application.
 * Updated:
 
-  * Reworked the :ref:`NCP sample <zigbee_ncp_sample>` to work with the simple gateway application.
-  * Moved the `NCP Host documentation`_ from the `ZBOSS NCP Host`_ package to the same location as the `external ZBOSS development guide and API documentation`_.
+  * Reworked the Zigbee NCP sample to work with the simple gateway application.
+  * Moved the NCP Host documentation from the ZBOSS NCP Host package to the same location as the external ZBOSS development guide and API documentation.
 
 nRF Desktop
 -----------
@@ -591,9 +591,9 @@ In addition to documentation related to the changes listed above, the following 
 
 * :ref:`ug_zigbee`:
 
-   * :ref:`zigbee_memory` - Updated the memory values for the latest release.
-   * :ref:`ug_zigbee_other_ecosystems` - New page.
-   * :ref:`ug_zigbee_tools` - Updated with new content and structure.
+   * Zigbee memory requirements - Updated the memory values for the latest release.
+   * Configuring Zigbee samples for other ecosystems - New page.
+   * Zigbee tools - Updated with new content and structure.
 
 * Documentation updates in HomeKit and Find My private repositories.
 
@@ -638,8 +638,8 @@ Applications and samples
 
 * Zigbee
 
-   * Added links to ZBOSS API documentation in :ref:`zigbee_light_bulb_sample`, :ref:`zigbee_network_coordinator_sample`, and :ref:`zigbee_light_switch_sample` samples.
-   * :ref:`zigbee_ncp_sample` - Updated the nRF5 SDK Bootloader section.
+   * Added links to ZBOSS API documentation in Zigbee Light bulb, Zigbee Network coordinator, and Zigbee Light switch samples.
+   * Zigbee NCP sample - Updated the nRF5 SDK Bootloader section.
 
 Libraries and drivers
 ---------------------
@@ -655,4 +655,4 @@ nrfxlib
 
 * :ref:`nrf_802154` - Full documentation of the radio driver is now available as part of nrfxlib and replaces the previous nRF 802.15.4 Service Layer documentation.
 * :ref:`nrf_security_readme` - Added section on Building with TF-M.
-* Added :ref:`zboss_certification`.
+* Added ZBOSS library certification.

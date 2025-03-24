@@ -47,15 +47,6 @@ config BT_MESH_CRYPTO_KEY_INITIALIZER
 
 endif # BT_SETTINGS
 
-if BT_LONG_WQ
-# There is no clear undestanding where this parameter should be adapted for ble mesh purposes.
-# This place has been chosen as temporary solution.
-# JIRA task NCSDK-31391 was created to solve the issue later.
-config BT_LONG_WQ_STACK_SIZE
-	default 4096
-
-endif # BT_LONG_WQ
-
 endif # BT_MESH_USES_MBEDTLS_PSA
 
 if BT_MESH_ADV_EXT
@@ -166,6 +157,22 @@ config BT_MESH_USES_TFM_PSA
 	select PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE
 	select PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT
 	select PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT
+
+config BT_MESH_KEY_IMPORTER
+	bool "Use key importer"
+	help
+	  Use key importer to read out the keys stored in settings subsystem
+	  and import them into PSA internal trusted storage. This is required if
+	  a provisioned device is still going to stay provisioned after changing
+	  from an image using TinyCrypt to an image that uses PSA crypto.
+
+config BT_MESH_KEY_IMPORTER_PRIO
+	int "Initialization priority for key importer"
+	depends on BT_MESH_KEY_IMPORTER
+	default KERNEL_INIT_PRIORITY_DEFAULT
+	help
+	  The key importer is initialized before the main application. It is initialized
+	  using system initialization macro with application level.
 
 choice TFM_PROFILE_TYPE
 	depends on BT_MESH_USES_TFM_PSA

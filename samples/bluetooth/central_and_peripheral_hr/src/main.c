@@ -50,6 +50,7 @@ K_MSGQ_DEFINE(hrs_queue, sizeof(struct bt_hrs_client_measurement), HRS_QUEUE_SIZ
 
 static struct bt_hrs_client hrs_c;
 static struct bt_conn *central_conn;
+static struct k_work adv_work;
 
 static const char * const sensor_location_str[] = {
 	"Other",
@@ -219,6 +220,23 @@ static int scan_start(void)
 	return err;
 }
 
+static void adv_work_handler(struct k_work *work)
+{
+	int err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_2, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+
+	if (err) {
+		printk("Advertising failed to start (err %d)\n", err);
+		return;
+	}
+
+	printk("Advertising successfully started\n");
+}
+
+static void advertising_start(void)
+{
+	k_work_submit(&adv_work);
+}
+
 static void connected(struct bt_conn *conn, uint8_t conn_err)
 {
 	int err;
@@ -302,10 +320,17 @@ static void security_changed(struct bt_conn *conn, bt_security_t level,
 	}
 }
 
+static void recycled_cb(void)
+{
+	printk("Connection object available from previous conn. Disconnect is complete!\n");
+	advertising_start();
+}
+
 BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected = connected,
 	.disconnected = disconnected,
-	.security_changed = security_changed
+	.security_changed = security_changed,
+	.recycled = recycled_cb,
 };
 
 static void scan_filter_match(struct bt_scan_device_info *device_info,
@@ -425,14 +450,8 @@ int main(void)
 
 	printk("Scanning started\n");
 
-	err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_2, ad, ARRAY_SIZE(ad),
-			      sd, ARRAY_SIZE(sd));
-	if (err) {
-		printk("Advertising failed to start (err %d)\n", err);
-		return 0;
-	}
-
-	printk("Advertising started\n");
+	k_work_init(&adv_work, adv_work_handler);
+	advertising_start();
 
 	for (;;) {
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);

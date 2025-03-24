@@ -6,6 +6,7 @@
 
 #include <dfu/suit_dfu.h>
 
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
 
@@ -240,30 +241,46 @@ int suit_dfu_update_start(void)
 	struct suit_nvm_device_info device_info;
 
 	for (size_t i = 0; i < CONFIG_SUIT_CACHE_MAX_CACHES; i++) {
-		if (suit_dfu_cache_rw_device_info_get(i, &device_info) == SUIT_PLAT_SUCCESS) {
-
+		if (suit_dfu_cache_rw_active_device_info_get(i, &device_info) ==
+		    SUIT_PLAT_SUCCESS) {
 			update_candidate[update_regions_count].mem = device_info.mapped_address;
 			update_candidate[update_regions_count].size = device_info.partition_size;
 			update_regions_count++;
 		}
 	}
 
-#ifdef CONFIG_SUIT_CACHE_SDFW_IPUC_ID
-	if (suit_dfu_cache_rw_device_info_get(CONFIG_SUIT_CACHE_SDFW_IPUC_ID, &device_info) ==
-	    SUIT_PLAT_SUCCESS) {
+#if defined(CONFIG_SUIT_CACHE_SDFW_IPUC_ID) &&                                                     \
+	(CONFIG_SUIT_CACHE_SDFW_IPUC_ID >= CONFIG_SUIT_CACHE_MAX_CACHES)
+	if (suit_dfu_cache_rw_active_device_info_get(CONFIG_SUIT_CACHE_SDFW_IPUC_ID,
+						     &device_info) == SUIT_PLAT_SUCCESS) {
 		update_candidate[update_regions_count].mem = device_info.mapped_address;
 		update_candidate[update_regions_count].size = device_info.partition_size;
 		update_regions_count++;
 	}
 #endif /* CONFIG_SUIT_CACHE_SDFW_IPUC_ID */
-#ifdef CONFIG_SUIT_CACHE_APP_IPUC_ID
-	if (suit_dfu_cache_rw_device_info_get(CONFIG_SUIT_CACHE_APP_IPUC_ID, &device_info) ==
+#if defined(CONFIG_SUIT_CACHE_APP_IPUC_ID) &&                                                      \
+	(CONFIG_SUIT_CACHE_APP_IPUC_ID >= CONFIG_SUIT_CACHE_MAX_CACHES)
+	if (suit_dfu_cache_rw_active_device_info_get(CONFIG_SUIT_CACHE_APP_IPUC_ID, &device_info) ==
 	    SUIT_PLAT_SUCCESS) {
 		update_candidate[update_regions_count].mem = device_info.mapped_address;
 		update_candidate[update_regions_count].size = device_info.partition_size;
 		update_regions_count++;
 	}
 #endif /* CONFIG_SUIT_CACHE_APP_IPUC_ID */
+#endif
+	for (size_t i = 0; i < update_regions_count; i++) {
+		LOG_INF("Update region %d/%d, 0x%08X, %d", i + 1, update_regions_count,
+			(uint32_t)update_candidate[i].mem, update_candidate[i].size);
+	}
+
+#if defined(CONFIG_SUIT_LOG_LEVEL_INF) || defined(CONFIG_SUIT_LOG_LEVEL_DBG)
+	/* Display empty line prior to reboot
+	 */
+	printk("\n");
+
+	/* Give a chance to display a log prior to reboot
+	 */
+	k_msleep(100);
 #endif
 
 	return suit_trigger_update(update_candidate, update_regions_count);
