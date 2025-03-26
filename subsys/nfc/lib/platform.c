@@ -136,8 +136,7 @@ nrfx_err_t nfc_platform_setup(nfc_lib_cb_resolve_t nfc_lib_cb_resolve, uint8_t *
 
 static nrfx_err_t nfc_platform_tagheaders_get(uint32_t tag_header[3])
 {
-#ifdef CONFIG_TRUSTED_EXECUTION_NONSECURE
-#if defined(CONFIG_BUILD_WITH_TFM)
+#if defined(CONFIG_TRUSTED_EXECUTION_NONSECURE) && defined(NRF_FICR_S)
 	uint32_t err = 0;
 	enum tfm_platform_err_t plt_err;
 	FICR_NFC_Type ficr_nfc_ns;
@@ -156,15 +155,12 @@ static nrfx_err_t nfc_platform_tagheaders_get(uint32_t tag_header[3])
 	tag_header[2] = ficr_nfc_ns.TAGHEADER2;
 
 #else
-#error "Cannot read FICR NFC Tag Header in current configuration"
-#endif
-#else
 
 	tag_header[0] = nrf_ficr_nfc_tagheader_get(NRF_FICR, 0);
 	tag_header[1] = nrf_ficr_nfc_tagheader_get(NRF_FICR, 1);
 	tag_header[2] = nrf_ficr_nfc_tagheader_get(NRF_FICR, 2);
 
-#endif /* CONFIG_TRUSTED_EXECUTION_NONSECURE */
+#endif /* CONFIG_TRUSTED_EXECUTION_NONSECURE && NRF_FICR_S */
 
 	return NRFX_SUCCESS;
 }
